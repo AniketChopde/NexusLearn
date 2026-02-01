@@ -1,0 +1,76 @@
+# FastAPI and ASGI Server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy[asyncio]==2.0.25
+asyncpg==0.29.0
+alembic==1.13.1
+psycopg2-binary==2.9.9
+aiosqlite==0.19.0
+
+# Redis and Caching
+redis==5.0.1
+hiredis==2.3.2
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Azure OpenAI
+openai==1.10.0
+tiktoken==0.5.2
+
+# Multi-Agent Frameworks - Choose ONE of these approaches:
+# Option 1: LangChain (Recommended for beginners)
+langchain
+langchain-openai
+langchain-community
+langchain-core
+
+# Option 2: CrewAI (Latest stable version)
+crewai
+crewai-tools
+
+# Option 3: AutoGen (Microsoft's framework)
+# pyautogen==0.2.18
+
+# Search
+duckduckgo-search==4.1.1
+
+# Vector Store
+faiss-cpu
+chromadb
+sentence-transformers==2.3.1
+beautifulsoup4
+lxml
+
+# Utilities
+httpx==0.26.0
+aiofiles==23.2.1
+python-dateutil==2.8.2
+
+# Monitoring and Logging
+loguru==0.7.2
+
+# Background Tasks
+celery==5.3.6
+flower==2.0.1
+kombu==5.3.5
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+faker==22.0.0
+
+# Additional useful packages
+requests==2.31.0
+pyyaml==6.0.1
+jsonschema==4.20.0
+tenacity==8.2.3
+
+pydantic[email]
