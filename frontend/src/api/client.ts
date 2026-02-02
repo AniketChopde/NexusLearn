@@ -2,15 +2,19 @@ import axios from 'axios';
 import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Production best practice: explicit /api path
+// This is cleaner, more maintainable, and easier to refactor later
+// Using import.meta.env (Vite-specific, NOT process.env)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Create axios instance
+// Create axios instance with professional configuration
 const apiClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
     timeout: 300000, // 5 minutes to accommodate slow AI generations or searches
+    withCredentials: false, // Set to true if using auth cookies
 });
 
 // Request interceptor - Add auth token
@@ -40,7 +44,8 @@ apiClient.interceptors.response.use(
             try {
                 const refreshToken = localStorage.getItem('refresh_token');
                 if (refreshToken) {
-                    const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {}, {
+                    // Use apiClient for consistency (baseURL already has /api)
+                    const response = await apiClient.post('/auth/refresh', {}, {
                         headers: {
                             Authorization: `Bearer ${refreshToken}`,
                         },
