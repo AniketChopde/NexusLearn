@@ -39,14 +39,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             {sidebarOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden">
                     <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-                    <div className="fixed inset-y-0 left-0 w-64 bg-card border-r">
+                    <div className="fixed inset-y-0 left-0 w-64 bg-card border-r flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
                             <h1 className="text-xl font-bold">AI Study Planner</h1>
                             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
                                 <X className="h-5 w-5" />
                             </Button>
                         </div>
-                        <nav className="p-4 space-y-2">
+                        <nav className="flex-1 p-4 space-y-2">
                             {navigation.map((item) => (
                                 <Link
                                     key={item.name}
@@ -59,6 +59,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 </Link>
                             ))}
                         </nav>
+                        <div className="p-4 border-t">
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="h-5 w-5 mr-3" />
+                                Logout
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
