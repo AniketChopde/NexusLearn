@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     app_name: str = "AI Study Planner"
     app_version: str = "1.0.0"
     debug: bool = False
-    allowed_origins: str = "http://localhost:3000,htttp://20.81.196.215:5173"
+    allowed_origins: str = "http://localhost:3000,http://20.81.196.215:5173"
     
     # Azure OpenAI Configuration (Chat/LLM)
     azure_openai_endpoint: str = Field(..., alias="AZURE_OPENAI_ENDPOINT")
