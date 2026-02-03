@@ -20,62 +20,62 @@ import type {
 // Auth Service
 export const authService = {
     register: (data: RegisterData) =>
-        apiClient.post<User>('/api/auth/register', data),
+        apiClient.post<User>('/auth/register', data),
 
     login: (credentials: LoginCredentials) =>
-        apiClient.post<TokenResponse>('/api/auth/login', credentials),
+        apiClient.post<TokenResponse>('/auth/login', credentials),
 
     getProfile: () =>
-        apiClient.get<User>('/api/auth/profile'),
+        apiClient.get<User>('/auth/profile'),
 
     refreshToken: () =>
-        apiClient.post<TokenResponse>('/api/auth/refresh'),
+        apiClient.post<TokenResponse>('/auth/refresh'),
 };
 
 // Study Plan Service
 export const studyPlanService = {
     create: (data: CreatePlanData) =>
-        apiClient.post('/api/study-plan/create', data),
+        apiClient.post('/study-plan/create', data),
 
     get: (id: string) =>
-        apiClient.get<StudyPlan>(`/api/study-plan/${id}`),
+        apiClient.get<StudyPlan>(`/study-plan/${id}`),
 
     list: () =>
-        apiClient.get<StudyPlan[]>('/api/study-plan'),
+        apiClient.get<StudyPlan[]>('/study-plan'),
 
     delete: (id: string) =>
-        apiClient.delete(`/api/study-plan/${id}`),
+        apiClient.delete(`/study-plan/${id}`),
 
     updateChapterStatus: (chapterId: string, status: 'pending' | 'in_progress' | 'completed') =>
-        apiClient.patch(`/api/study-plan/chapter/${chapterId}`, { status }),
+        apiClient.patch(`/study-plan/chapter/${chapterId}`, { status }),
 
     teachChapter: (chapterId: string) =>
-        apiClient.post(`/api/study-plan/chapter/${chapterId}/teach`),
+        apiClient.post(`/study-plan/chapter/${chapterId}/teach`),
 };
 
 // Content Service
 export const contentService = {
     explain: (topic: string, detailLevel: string = 'detailed', includeExamples: boolean = true) =>
-        apiClient.post<Explanation>('/api/content/explain', {
+        apiClient.post<Explanation>('/content/explain', {
             topic,
             detail_level: detailLevel,
             include_examples: includeExamples,
         }),
 
     createMindmap: (subject: string) =>
-        apiClient.post<Mindmap>('/api/content/mindmap', { subject }),
+        apiClient.post<Mindmap>('/content/mindmap', { subject }),
 };
 
 // Topic Mindmap Service
 export const mindmapService = {
     getTopicMindmap: (topicId: string) =>
-        apiClient.get<TopicMindmap>(`/api/mindmap/topic/${encodeURIComponent(topicId)}`),
+        apiClient.get<TopicMindmap>(`/mindmap/topic/${encodeURIComponent(topicId)}`),
 };
 
 // Quiz Service
 export const quizService = {
     generate: (topic: string, subject: string, questionCount: number = 10, difficulty: string = 'medium', examType?: string | null) =>
-        apiClient.post<Quiz>('/api/quiz/generate', {
+        apiClient.post<Quiz>('/quiz/generate', {
             topic,
             subject,
             question_count: questionCount,
@@ -84,37 +84,37 @@ export const quizService = {
         }),
 
     submit: (submission: QuizSubmission) =>
-        apiClient.post<QuizResult>('/api/quiz/submit', submission),
+        apiClient.post<QuizResult>('/quiz/submit', submission),
 
     getHistory: () =>
-        apiClient.get<Quiz[]>('/api/quiz/history'),
+        apiClient.get<Quiz[]>('/quiz/history'),
 
     startTestCenter: (examName: string) =>
-        apiClient.post<Quiz>('/api/quiz/test-center', { exam_name: examName }),
+        apiClient.post<Quiz>('/quiz/test-center', { exam_name: examName }),
 
     generateChapterQuiz: (chapterId: string) =>
-        apiClient.post<Quiz>(`/api/quiz/chapter/${chapterId}/generate`),
+        apiClient.post<Quiz>(`/quiz/chapter/${chapterId}/generate`),
 };
 
 // Chat Service
 export const chatService = {
     sendMessage: (request: ChatRequest) =>
-        apiClient.post<ChatResponse>('/api/chat/message', request),
+        apiClient.post<ChatResponse>('/chat/message', request),
 
     getHistory: (sessionId: string) =>
-        apiClient.get(`/api/chat/history/${sessionId}`),
+        apiClient.get(`/chat/history/${sessionId}`),
 
     deleteSession: (sessionId: string) =>
-        apiClient.delete(`/api/chat/session/${sessionId}`),
+        apiClient.delete(`/chat/session/${sessionId}`),
 };
 
 // Search Service
 export const searchService = {
     deepSearch: (query: string, searchDepth: string = 'comprehensive') =>
-        apiClient.post('/api/search/deep', { query, search_depth: searchDepth }),
+        apiClient.post('/search/deep', { query, search_depth: searchDepth }),
 
     searchResources: (topic: string, resourceType: string = 'all') =>
-        apiClient.post<{ topic: string; resources: Resource[] }>('/api/search/resources', {
+        apiClient.post<{ topic: string; resources: Resource[] }>('/search/resources', {
             topic,
             resource_type: resourceType,
         }),
@@ -123,11 +123,11 @@ export const searchService = {
 // Analytics Service (if you add analytics endpoints later)
 export const analyticsService = {
     getStats: () =>
-        apiClient.get('/api/analytics/stats'),
+        apiClient.get('/analytics/stats'),
 
     getProgress: () =>
-        apiClient.get('/api/analytics/progress'),
+        apiClient.get('/analytics/progress'),
 
     getGaps: () =>
-        apiClient.get('/api/analytics/gaps'),
+        apiClient.get('/analytics/gaps'),
 };
