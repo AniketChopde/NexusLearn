@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { quizService } from '../api/services';
-import type { Quiz, QuizResult } from '../types';
+import type { Quiz, QuizResult, QuizHistoryItem } from '../types';
 import toast from 'react-hot-toast';
 
 interface QuizState {
@@ -8,7 +8,7 @@ interface QuizState {
     currentQuestion: number;
     answers: Record<string, string>;
     results: QuizResult | null;
-    quizHistory: Quiz[];
+    quizHistory: QuizHistoryItem[];
     isLoading: boolean;
     timeStarted: number | null;
 
@@ -169,6 +169,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         }
     },
 
+    // Clears only the current in-progress quiz so a new one can be started. Does NOT remove or clear
+    // quiz history: completed quizzes remain stored on the backend and in quizHistory when fetched.
     resetQuiz: () => {
         set({
             activeQuiz: null,

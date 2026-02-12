@@ -7,6 +7,7 @@ import type {
     CreatePlanData,
     StudyPlan,
     Quiz,
+    QuizHistoryItem,
     QuizSubmission,
     QuizResult,
     ChatRequest,
@@ -15,6 +16,7 @@ import type {
     Explanation,
     Mindmap,
     TopicMindmap,
+    DashboardStats,
 } from '../types';
 
 // Auth Service
@@ -87,7 +89,7 @@ export const quizService = {
         apiClient.post<QuizResult>('/quiz/submit', submission),
 
     getHistory: () =>
-        apiClient.get<Quiz[]>('/quiz/history'),
+        apiClient.get<QuizHistoryItem[]>('/quiz/history'),
 
     startTestCenter: (examName: string) =>
         apiClient.post<Quiz>('/quiz/test-center', { exam_name: examName }),
@@ -120,10 +122,10 @@ export const searchService = {
         }),
 };
 
-// Analytics Service (if you add analytics endpoints later)
+// Analytics / Dashboard Service
 export const analyticsService = {
     getStats: () =>
-        apiClient.get('/analytics/stats'),
+        apiClient.get<DashboardStats>('/analytics/stats'),
 
     getProgress: () =>
         apiClient.get('/analytics/progress'),

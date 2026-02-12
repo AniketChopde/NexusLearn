@@ -6,13 +6,36 @@ import { Loading } from '../components/ui/Loading';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { BookOpen, Brain, MessageSquare, TrendingUp, Clock, Target, Award, Flame } from 'lucide-react';
+import { analyticsService } from '../api/services';
+import type { DashboardStats } from '../types';
 
 export const DashboardPage: React.FC = () => {
     const { user } = useAuthStore();
     const { plans, isLoading, fetchPlans } = useStudyPlanStore();
+    const [stats, setStats] = React.useState<DashboardStats | null>(null);
+    const [statsLoading, setStatsLoading] = React.useState(true);
 
     React.useEffect(() => {
         fetchPlans();
+    }, []);
+
+    React.useEffect(() => {
+        let cancelled = false;
+        setStatsLoading(true);
+        analyticsService
+            .getStats()
+            .then((res) => {
+                if (!cancelled) setStats(res.data);
+            })
+            .catch(() => {
+                if (!cancelled) setStats(null);
+            })
+            .finally(() => {
+                if (!cancelled) setStatsLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     if (isLoading && plans.length === 0) {
@@ -25,11 +48,36 @@ export const DashboardPage: React.FC = () => {
 
     const activePlan = plans.find((p) => p.status === 'active');
 
-    const stats = [
-        { name: 'Study Streak', value: '7 days', icon: Flame, color: 'text-orange-500' },
-        { name: 'Hours Studied', value: '24.5h', icon: Clock, color: 'text-blue-500' },
-        { name: 'Topics Completed', value: '12/45', icon: Target, color: 'text-green-500' },
-        { name: 'Quiz Average', value: '78%', icon: Award, color: 'text-purple-500' },
+    const statRows = [
+        {
+            name: 'Study Streak',
+            value: statsLoading ? '…' : `${stats?.study_streak_days ?? 0} days`,
+            icon: Flame,
+            color: 'text-orange-500',
+        },
+        {
+            name: 'Hours Studied',
+            value: statsLoading ? '…' : `${stats?.hours_studied ?? 0}h`,
+            icon: Clock,
+            color: 'text-blue-500',
+        },
+        {
+            name: 'Topics Completed',
+            value: statsLoading ? '…' : `${stats?.topics_completed ?? 0}/${stats?.topics_total ?? 0}`,
+            icon: Target,
+            color: 'text-green-500',
+        },
+        {
+            name: 'Quiz Average',
+            value:
+                statsLoading
+                    ? '…'
+                    : stats?.quiz_average_percent != null
+                      ? `${Math.round(stats.quiz_average_percent)}%`
+                      : '—',
+            icon: Award,
+            color: 'text-purple-500',
+        },
     ];
 
     const quickActions = [
@@ -43,15 +91,21 @@ export const DashboardPage: React.FC = () => {
         <div className="space-y-8">
             {/* Welcome Section */}
             <div>
-                <h1 className="text-3xl font-bold">Welcome back, {user?.full_name || 'Student'}! 👋</h1>
+                <h1 className="text-3xl font-bold">
+                    {!statsLoading && stats && (stats.study_streak_days > 0 || stats.hours_studied > 0 || stats.topics_completed > 0 || (stats.quiz_average_percent != null))
+                        ? `Welcome back, ${user?.full_name || 'Student'}! 👋`
+                        : `Welcome, ${user?.full_name || 'Student'}! 👋`}
+                </h1>
                 <p className="text-muted-foreground mt-2">
-                    Here's your learning progress and what's next
+                    {!statsLoading && stats && (stats.study_streak_days > 0 || stats.hours_studied > 0 || stats.topics_completed > 0 || (stats.quiz_average_percent != null))
+                        ? "Here's your learning progress and what's next"
+                        : "Create a study plan, start learning in Chat, or take a quiz to see your stats here."}
                 </p>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat) => (
+                {statRows.map((stat) => (
                     <Card key={stat.name}>
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between">
@@ -128,30 +182,51 @@ export const DashboardPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Today's Schedule */}
+            {/* Today's Schedule / Next up */}
             <Card>
                 <CardHeader>
                     <CardTitle>Today's Schedule</CardTitle>
-                    <CardDescription>Your planned activities for today</CardDescription>
+                    <CardDescription>Your planned activities and what's next</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3">
-                        {[
-                            { time: '09:00 AM', task: 'Operating Systems - Process Synchronization', duration: '2h' },
-                            { time: '02:00 PM', task: 'Database Management - SQL Queries', duration: '1.5h' },
-                            { time: '05:00 PM', task: 'Quiz - Computer Networks', duration: '30m' },
-                        ].map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <Clock className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="font-medium">{item.task}</p>
-                                        <p className="text-sm text-muted-foreground">{item.time}</p>
-                                    </div>
-                                </div>
-                                <span className="text-sm text-muted-foreground">{item.duration}</span>
-                            </div>
-                        ))}
+                        {activePlan?.chapters?.length ? (
+                            (() => {
+                                const next = activePlan.chapters.find(
+                                    (ch) => ch.status === 'in_progress' || ch.status === 'pending'
+                                );
+                                if (next) {
+                                    return (
+                                        <div className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                                <div>
+                                                    <p className="font-medium">
+                                                        Next: {next.chapter_name}
+                                                        {next.subject ? ` (${next.subject})` : ''}
+                                                    </p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {next.status === 'in_progress' ? 'In progress' : 'Pending'} • ~{next.estimated_hours}h
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Link to={`/study-plans/${activePlan.id}`}>
+                                                <Button variant="outline" size="sm">Open plan</Button>
+                                            </Link>
+                                        </div>
+                                    );
+                                }
+                                return (
+                                    <p className="text-muted-foreground py-2">
+                                        All chapters in your active plan are completed. Great job! Create a new plan or take a quiz.
+                                    </p>
+                                );
+                            })()
+                        ) : (
+                            <p className="text-muted-foreground py-2">
+                                No scheduled activities yet. Create a study plan or start learning from Chat.
+                            </p>
+                        )}
                     </div>
                 </CardContent>
             </Card>

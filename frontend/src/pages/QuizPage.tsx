@@ -2,14 +2,14 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuizStore } from '../stores/quizStore';
 import { useStudyPlanStore } from '../stores/studyPlanStore';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Loading } from '../components/ui/Loading';
 import {
     Brain, Clock, CheckCircle, XCircle,
     ArrowRight, RefreshCcw, GraduationCap,
-    Target, Award, AlertTriangle, Lightbulb
+    Target, Award, AlertTriangle, Lightbulb, History
 } from 'lucide-react';
 import { formatTime } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -23,6 +23,7 @@ export const QuizPage: React.FC = () => {
         answers,
         results,
         timeStarted,
+        quizHistory,
         generateQuiz,
         generateChapterQuiz,
         submitAnswer,
@@ -30,16 +31,14 @@ export const QuizPage: React.FC = () => {
         nextQuestion,
         previousQuestion,
         resetQuiz,
+        fetchHistory,
         isLoading,
     } = useQuizStore();
 
-    const { updateChapterStatus } = useStudyPlanStore();
 
     const [topic, setTopic] = React.useState('');
     const [subject, setSubject] = React.useState('');
     const [elapsedTime, setElapsedTime] = React.useState(0);
-    const [progressionProcessed, setProgressionProcessed] = React.useState(false);
-
     // Parse URL params
     const queryParams = new URLSearchParams(location.search);
     const urlTopic = queryParams.get('topic');
@@ -50,15 +49,25 @@ export const QuizPage: React.FC = () => {
 
     const hasStartedRef = React.useRef(false);
 
+    // When coming from Study Plan "Knowledge Check" with chapterId, only clear *completed* quiz (results) so we can start a new one. Do NOT clear activeQuiz or we'd reset the quiz we're taking and trigger generation again in a loop.
+    React.useEffect(() => {
+        if (urlChapterId && results) {
+            resetQuiz();
+            hasStartedRef.current = false;
+        }
+    }, [urlChapterId, results, resetQuiz]);
+
     React.useEffect(() => {
         if (urlTopic && urlTopic !== topic) setTopic(urlTopic);
         if (urlSubject && urlSubject !== subject) setSubject(urlSubject);
 
-        if (autoStart && !activeQuiz && !results && !isLoading && urlTopic && urlSubject && !hasStartedRef.current) {
-            hasStartedRef.current = true;
+        const hasChapterContext = urlChapterId || (urlTopic && urlSubject);
+        const canAutoStart = autoStart && hasChapterContext && !activeQuiz && !results && !isLoading && !hasStartedRef.current;
+        if (canAutoStart) {
+            hasStartedRef.current = true; // set immediately so we never fire twice (e.g. Strict Mode)
             handleGenerateQuiz();
         }
-    }, [urlTopic, urlSubject, autoStart, activeQuiz, results, isLoading]);
+    }, [urlTopic, urlSubject, urlChapterId, autoStart, activeQuiz, results, isLoading]);
 
     React.useEffect(() => {
         if (timeStarted) {
@@ -69,20 +78,6 @@ export const QuizPage: React.FC = () => {
         }
     }, [timeStarted]);
 
-    // Progressive Learning Logic
-    React.useEffect(() => {
-        const processProgression = async () => {
-            if (results && urlChapterId && !progressionProcessed) {
-                setProgressionProcessed(true);
-                if (results.score >= 70) {
-                    await updateChapterStatus(urlChapterId, 'completed');
-                    toast.success('Chapter Mastred! Progress Saved.');
-                }
-            }
-        };
-        processProgression();
-    }, [results, urlChapterId, progressionProcessed, updateChapterStatus]);
-
     const handleGenerateQuiz = async () => {
         if (urlChapterId) {
             await generateChapterQuiz(urlChapterId);
@@ -92,7 +87,6 @@ export const QuizPage: React.FC = () => {
             if (!finalTopic || !finalSubject) return;
             await generateQuiz(finalTopic, finalSubject, 10, 'medium', urlExamType);
         }
-        setProgressionProcessed(false);
     };
 
     const handleSubmitQuiz = async () => {
@@ -102,10 +96,17 @@ export const QuizPage: React.FC = () => {
     const currentQ = activeQuiz?.questions[currentQuestion];
     const selectedAnswer = currentQ ? answers[currentQ.question_id] : undefined;
 
+    // Fetch quiz history when on config view so user can see their previous attempts
+    React.useEffect(() => {
+        if (!activeQuiz && !results) {
+            fetchHistory();
+        }
+    }, [activeQuiz, results, fetchHistory]);
+
     // Quiz Generation Form
     if (!activeQuiz && !results) {
         return (
-            <div className="max-w-2xl mx-auto py-12 px-4 animate-in fade-in duration-700">
+            <div className="max-w-2xl mx-auto py-12 px-4 animate-in fade-in duration-700 space-y-10">
                 <div className="text-center mb-10 space-y-4">
                     <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Brain className="h-10 w-10 text-primary" />
@@ -146,6 +147,52 @@ export const QuizPage: React.FC = () => {
                         >
                             Start Assessment 🚀
                         </Button>
+                    </CardContent>
+                </Card>
+
+                {/* Your Quiz History – stored attempts, always visible */}
+                <Card className="border-none shadow-xl bg-card rounded-[2.5rem] overflow-hidden">
+                    <CardHeader className="p-6 pb-0">
+                        <CardTitle className="text-base font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                            <History size={18} />
+                            Your Quiz History
+                        </CardTitle>
+                        <CardDescription className="text-sm text-muted-foreground/80">
+                            Previous attempts are stored here. Starting a new quiz does not remove them.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6 pt-4">
+                        {quizHistory.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-6 text-center">
+                                No quizzes yet. Complete a quiz to see it here.
+                            </p>
+                        ) : (
+                            <ul className="space-y-3 max-h-64 overflow-y-auto">
+                                {quizHistory.map((entry) => (
+                                    <li
+                                        key={entry.id}
+                                        className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-foreground truncate">{entry.topic}</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{entry.subject} · {entry.difficulty}</p>
+                                        </div>
+                                        <div className="flex items-center gap-4 shrink-0 ml-4">
+                                            {entry.status === 'completed' && entry.score != null && (
+                                                <span className={`text-sm font-black px-2.5 py-1 rounded-lg ${entry.score >= 70 ? 'bg-green-500/20 text-green-600' : 'bg-amber-500/20 text-amber-600'}`}>
+                                                    {Math.round(entry.score)}%
+                                                </span>
+                                            )}
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                                {entry.completed_at
+                                                    ? new Date(entry.completed_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                                                    : new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            </span>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </CardContent>
                 </Card>
             </div>

@@ -79,6 +79,18 @@ export interface Quiz {
     created_at: string;
 }
 
+/** Quiz history entry (from GET /quiz/history) – stored attempts, no questions. */
+export interface QuizHistoryItem {
+    id: string;
+    topic: string;
+    subject: string;
+    difficulty: string;
+    status: string;
+    score?: number | null;
+    completed_at?: string | null;
+    created_at: string;
+}
+
 export interface Question {
     question_id: string;
     question_text?: string; // Make optional to allow fallback
@@ -158,6 +170,15 @@ export interface UserStats {
     total_hours: number;
     completed_topics: number;
     quiz_average: number;
+}
+
+/** Dashboard stats from /api/analytics/stats */
+export interface DashboardStats {
+    study_streak_days: number;
+    hours_studied: number;
+    topics_completed: number;
+    topics_total: number;
+    quiz_average_percent: number | null;
 }
 
 export interface Progress {

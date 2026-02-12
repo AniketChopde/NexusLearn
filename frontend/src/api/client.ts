@@ -31,42 +31,76 @@ apiClient.interceptors.request.use(
     }
 );
 
+// Single in-flight refresh: avoid multiple 401s all triggering refresh at once
+let refreshPromise: Promise<string | null> | null = null;
+
+function clearAuthAndRedirect() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+}
+
+function isRefreshRequest(config: InternalAxiosRequestConfig): boolean {
+    const url = config.url ?? '';
+    const baseURL = config.baseURL ?? '';
+    const full = url.startsWith('http') ? url : `${baseURL.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    return full.includes('/auth/refresh');
+}
+
 // Response interceptor - Handle errors and token refresh
 apiClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // Handle 401 Unauthorized - Token expired
+        // If this 401 is FROM the refresh call itself, do not try to refresh again (prevents loop)
+        if (error.response?.status === 401 && isRefreshRequest(originalRequest)) {
+            clearAuthAndRedirect();
+            return Promise.reject(error);
+        }
+
+        // Handle 401 Unauthorized - Token expired (for normal API calls)
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) {
+                clearAuthAndRedirect();
+                return Promise.reject(error);
+            }
+
             try {
-                const refreshToken = localStorage.getItem('refresh_token');
-                if (refreshToken) {
-                    // Use apiClient for consistency (baseURL already has /api)
-                    const response = await apiClient.post('/auth/refresh', {}, {
-                        headers: {
-                            Authorization: `Bearer ${refreshToken}`,
-                        },
-                    });
+                // Only one refresh at a time; other 401s wait for this
+                if (!refreshPromise) {
+                    refreshPromise = (async () => {
+                        try {
+                            const response = await apiClient.post(
+                                '/auth/refresh',
+                                {},
+                                {
+                                    headers: { Authorization: `Bearer ${refreshToken}` },
+                                    // Mark so the interceptor won't try to refresh again if this 401s
+                                } as InternalAxiosRequestConfig
+                            );
+                            const { access_token, refresh_token: newRefresh } = response.data;
+                            localStorage.setItem('access_token', access_token);
+                            localStorage.setItem('refresh_token', newRefresh);
+                            return access_token;
+                        } finally {
+                            refreshPromise = null;
+                        }
+                    })();
+                }
 
-                    const { access_token, refresh_token } = response.data;
-                    localStorage.setItem('access_token', access_token);
-                    localStorage.setItem('refresh_token', refresh_token);
-
-                    if (originalRequest.headers) {
-                        originalRequest.headers.Authorization = `Bearer ${access_token}`;
-                    }
-
+                const newAccessToken = await refreshPromise;
+                if (newAccessToken && originalRequest.headers) {
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     return apiClient(originalRequest);
                 }
             } catch (refreshError) {
-                // Refresh failed - logout user
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
+                refreshPromise = null;
+                clearAuthAndRedirect();
                 return Promise.reject(refreshError);
             }
         }
@@ -75,7 +109,6 @@ apiClient.interceptors.response.use(
         const errorData = error.response?.data as any;
         const errorMessage = errorData?.detail || errorData?.message || error.message || 'An error occurred';
 
-        // Don't show toast for 401 (handled above)
         if (error.response?.status !== 401) {
             toast.error(errorMessage);
         }

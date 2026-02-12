@@ -417,7 +417,7 @@ export const StudyPlanDetailPage: React.FC = () => {
                                             <Button
                                                 variant="secondary"
                                                 className="px-8 rounded-2xl h-14 text-sm font-black uppercase tracking-widest"
-                                                onClick={() => navigate(`/quiz?topic=${encodeURIComponent(selectedChapter.chapter_name)}&subject=${encodeURIComponent(selectedChapter.subject)}&chapterId=${selectedChapter.id.toString()}&examType=${encodeURIComponent(activePlan.exam_type)}`)}
+                                                onClick={() => navigate(`/quiz?topic=${encodeURIComponent(selectedChapter.chapter_name)}&subject=${encodeURIComponent(selectedChapter.subject)}&chapterId=${selectedChapter.id.toString()}&examType=${encodeURIComponent(activePlan.exam_type)}&autoStart=true`)}
                                             >
                                                 Knowledge Check
                                             </Button>
