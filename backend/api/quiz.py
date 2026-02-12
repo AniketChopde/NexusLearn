@@ -13,7 +13,7 @@ from datetime import datetime
 from database.connection import get_db
 from models.quiz import (
     QuizSession, QuizGenerate, QuizSubmit,
-    QuizResponse, QuizResultResponse, TestCenterGenerate
+    QuizResponse, QuizResultResponse, QuizHistoryEntry, TestCenterGenerate
 )
 from utils.auth import get_current_user, TokenData
 from agents.quiz_agent import quiz_agent
@@ -338,15 +338,20 @@ async def submit_quiz(
         )
 
 
-@router.get("/history", response_model=List[QuizResponse])
+@router.get("/history", response_model=List[QuizHistoryEntry])
 async def get_quiz_history(
     current_user: TokenData = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get quiz history for current user."""
+    """Get quiz history for current user: only completed attempts (submitted quizzes with score)."""
     try:
         result = await db.execute(
-            select(QuizSession).where(QuizSession.user_id == current_user.user_id)
+            select(QuizSession)
+            .where(
+                QuizSession.user_id == current_user.user_id,
+                QuizSession.status == "completed",
+            )
+            .order_by(QuizSession.completed_at.desc(), QuizSession.created_at.desc())
         )
         quizzes = result.scalars().all()
         return quizzes

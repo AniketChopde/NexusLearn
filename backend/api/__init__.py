@@ -1,6 +1,6 @@
 """API package initialization."""
 
-from api import auth, study_plan, content, quiz, chat, search, mindmap
+from api import auth, study_plan, content, quiz, chat, search, mindmap, analytics
 
 __all__ = [
     "auth",
@@ -10,4 +10,5 @@ __all__ = [
     "chat",
     "search",
     "mindmap",
+    "analytics",
 ]

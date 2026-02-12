@@ -12,7 +12,7 @@ import sys
 
 from config import settings
 from database.connection import init_db, close_db
-from api import auth, study_plan, content, quiz, chat, search, mindmap
+from api import auth, study_plan, content, quiz, chat, search, mindmap, analytics
 
 # Configure logging
 logger.remove()
@@ -132,6 +132,7 @@ app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
 app.include_router(mindmap.router, prefix="/api/mindmap", tags=["Mindmap"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 
 
 if __name__ == "__main__":

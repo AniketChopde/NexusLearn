@@ -114,6 +114,21 @@ class QuizResponse(BaseModel):
         from_attributes = True
 
 
+class QuizHistoryEntry(BaseModel):
+    """Lightweight schema for quiz history list (no questions)."""
+    id: uuid.UUID
+    topic: str
+    subject: str
+    difficulty: str
+    status: str
+    score: float | None = None
+    completed_at: datetime | None = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
 class QuizResultResponse(BaseModel):
     """Schema for quiz result response."""
     id: uuid.UUID
