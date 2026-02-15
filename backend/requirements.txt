@@ -73,4 +73,7 @@ pyyaml==6.0.1
 jsonschema==4.20.0
 tenacity==8.2.3
 
-pydantic[email]
+pypdf==3.17.4
+youtube-transcript-api==0.6.1
+python-docx==1.1.0
+Pillow==10.2.0

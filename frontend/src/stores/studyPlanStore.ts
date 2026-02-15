@@ -9,6 +9,7 @@ interface StudyPlanState {
     isLoading: boolean;
     isCreating: boolean;
     isTeaching: boolean;
+    isSearchingCourses: boolean;
 
     // Actions
     fetchPlans: () => Promise<void>;
@@ -17,6 +18,7 @@ interface StudyPlanState {
     deletePlan: (id: string) => Promise<void>;
     updateChapterStatus: (chapterId: string, status: 'pending' | 'in_progress' | 'completed') => Promise<void>;
     teachChapter: (chapterId: string) => Promise<any>;
+    getCourses: (planId: string) => Promise<void>;
     setActivePlan: (plan: StudyPlan | null) => void;
 }
 
@@ -26,6 +28,7 @@ export const useStudyPlanStore = create<StudyPlanState>((set, get) => ({
     isLoading: false,
     isCreating: false,
     isTeaching: false,
+    isSearchingCourses: false,
 
     fetchPlans: async () => {
         try {
@@ -72,6 +75,28 @@ export const useStudyPlanStore = create<StudyPlanState>((set, get) => ({
             set({ isLoading: false });
             toast.error('Failed to fetch study plan');
             throw error;
+        }
+    },
+
+    getCourses: async (planId: string) => {
+        try {
+            set({ isSearchingCourses: true });
+            // Don't set global isLoading to avoid full page spinner
+            const response = await studyPlanService.getCourses(planId);
+
+            set((state) => {
+                if (!state.activePlan || state.activePlan.id !== planId) return state;
+                return {
+                    activePlan: {
+                        ...state.activePlan,
+                        recommended_courses: response.data
+                    },
+                    isSearchingCourses: false
+                };
+            });
+        } catch (error) {
+            console.error('Failed to fetch courses:', error);
+            set({ isSearchingCourses: false });
         }
     },
 

@@ -362,3 +362,49 @@ async def get_quiz_history(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch quiz history"
         )
+
+@router.get("/{quiz_id}", response_model=QuizResultResponse)
+async def get_quiz_result(
+    quiz_id: uuid.UUID,
+    current_user: TokenData = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get detailed results for a specific quiz."""
+    try:
+        result = await db.execute(
+            select(QuizSession).where(
+                QuizSession.id == quiz_id,
+                QuizSession.user_id == current_user.user_id
+            )
+        )
+        quiz_session = result.scalar_one_or_none()
+        
+        if not quiz_session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+            
+        # Re-calculate detailed results since we don't store them
+        # We need them for the frontend to show the detailed breakdown
+        quiz_data = {
+            "questions": quiz_session.questions,
+            "answers": quiz_session.answers
+        }
+        
+        # Calculate details (Score is already in DB, but we need the breakdown)
+        score_data = await quiz_agent.calculate_score(quiz_data)
+        
+        return {
+            **quiz_session.__dict__,
+            "detailed_results": score_data["detailed_results"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching quiz details: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch quiz details"
+        )

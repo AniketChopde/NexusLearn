@@ -20,6 +20,11 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
+        // Skip adding access token for refresh requests as they use the refresh token
+        if (config.url?.includes('/auth/refresh')) {
+            return config;
+        }
+
         const token = localStorage.getItem('access_token');
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -116,5 +121,24 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+// Content Upload API
+export const uploadContent = async (planId: string, file: File | null, url: string | null) => {
+    const formData = new FormData();
+    formData.append('plan_id', planId);
+    if (file) {
+        formData.append('file', file);
+    }
+    if (url) {
+        formData.append('url', url);
+    }
+
+    const response = await apiClient.post('/content/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
 
 export default apiClient;

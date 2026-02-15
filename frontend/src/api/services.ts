@@ -53,6 +53,9 @@ export const studyPlanService = {
 
     teachChapter: (chapterId: string) =>
         apiClient.post(`/study-plan/chapter/${chapterId}/teach`),
+
+    getCourses: (planId: string) =>
+        apiClient.get<Resource[]>(`/study-plan/${planId}/courses`),
 };
 
 // Content Service
@@ -96,6 +99,9 @@ export const quizService = {
 
     generateChapterQuiz: (chapterId: string) =>
         apiClient.post<Quiz>(`/quiz/chapter/${chapterId}/generate`),
+
+    getResult: (id: string) =>
+        apiClient.get<QuizResult>(`/quiz/${id}`),
 };
 
 // Chat Service

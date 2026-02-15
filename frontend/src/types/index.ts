@@ -33,6 +33,7 @@ export interface StudyPlan {
     daily_hours: number;
     status: string;
     current_knowledge: Record<string, any>;
+    recommended_courses?: Resource[]; // New field
     chapters: Chapter[];
     plan_metadata?: Record<string, any>;
     created_at: string;

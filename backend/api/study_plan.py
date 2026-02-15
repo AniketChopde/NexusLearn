@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from typing import List, Dict
+from typing import List, Dict, Any
 from loguru import logger
 import uuid
 
@@ -80,7 +80,7 @@ async def create_study_plan(
                 chapter_name=module_name,
                 subject=plan_data.exam_type,
                 topics=topics,
-                estimated_hours=int(module.get("estimated_days", 1)) * plan_data.daily_hours,
+                estimated_hours=int(float(module.get("estimated_days", 1)) * plan_data.daily_hours),
                 order_index=idx,
                 status="pending",
                 resources=[] # Resources will be grounded via Research Agent during teaching
@@ -89,6 +89,19 @@ async def create_study_plan(
             
         await db.commit()
         await db.refresh(study_plan)
+        
+        # Trigger background course recommendation
+        try:
+            from agents.course_recommendation_agent import course_recommendation_agent
+            recommendations = await course_recommendation_agent.recommend_courses(
+                exam_type=plan_data.exam_type,
+                current_knowledge=plan_data.current_knowledge
+            )
+            study_plan.recommended_courses = recommendations
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Error generating course recommendations: {str(e)}")
+            # Don't fail the request, just log it
         
         # Re-fetch with chapters for the response
         final_plan = await db.execute(
@@ -170,6 +183,58 @@ async def get_study_plan(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch study plan"
+        )
+
+
+@router.get("/{plan_id}/courses", response_model=List[Dict[str, Any]])
+async def get_plan_courses(
+    plan_id: uuid.UUID,
+    current_user: TokenData = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get recommended courses for a study plan."""
+    try:
+        result = await db.execute(
+            select(StudyPlan)
+            .where(
+                StudyPlan.id == plan_id,
+                StudyPlan.user_id == current_user.user_id
+            )
+        )
+        plan = result.scalar_one_or_none()
+        
+        if not plan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Study plan not found"
+            )
+            
+        # If courses are missing, generate them on-demand
+        if not plan.recommended_courses:
+            try:
+                from agents.course_recommendation_agent import course_recommendation_agent
+                recommendations = await course_recommendation_agent.recommend_courses(
+                    exam_type=plan.exam_type,
+                    current_knowledge=plan.current_knowledge
+                )
+                
+                # Update database
+                plan.recommended_courses = recommendations
+                await db.commit()
+                return recommendations
+            except Exception as e:
+                logger.error(f"Error generating on-demand courses: {str(e)}")
+                return []
+                
+        return plan.recommended_courses
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching plan courses: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch courses"
         )
 
 

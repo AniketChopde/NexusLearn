@@ -581,12 +581,16 @@ JSON FORMAT:
   ]
 }}"""
 
+            # Fix SyntaxError: Extract pyq_section to avoid backslash in f-expression
+            pyq_section = f"""PYQ Examples (for reference):
+{pyq_summary}""" if pyq_found else ""
+
             # Minimal user prompt
             user_prompt = f"""Topic: {topic}
 Exam: {exam_type}
 Count: {count} questions
 
-{f"PYQ Examples (for reference):\\n{pyq_summary}" if pyq_found else ""}
+{pyq_section}
 
 Generate {count} high-quality exam questions."""
 
