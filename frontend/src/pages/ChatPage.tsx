@@ -7,6 +7,7 @@ import { Loading } from '../components/ui/Loading';
 import { Send, Bot, User, ArrowLeft } from 'lucide-react';
 import { formatDate } from '../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 export const ChatPage: React.FC = () => {
     const { messages, isTyping, sendMessage, createSession, activeSession, setChatContext } = useChatStore();
@@ -116,7 +117,9 @@ export const ChatPage: React.FC = () => {
                                     : 'bg-accent'
                                     }`}
                             >
-                                <p className="whitespace-pre-wrap">{message.content}</p>
+                                <div className={`prose ${message.role === 'user' ? 'prose-invert' : 'prose-zinc dark:prose-invert'} max-w-none prose-sm`}>
+                                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                                </div>
                                 <p className="text-xs opacity-70 mt-2">
                                     {formatDate(message.timestamp)}
                                 </p>

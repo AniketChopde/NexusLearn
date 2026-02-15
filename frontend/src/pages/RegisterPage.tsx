@@ -49,9 +49,13 @@ export const RegisterPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
+                    <div className="flex flex-col items-center justify-center gap-2 mb-2">
+                        <img src="/logo.png" alt="StudyItUp" className="h-12 w-12" />
+                        <span className="text-2xl font-bold text-primary">StudyItUp</span>
+                    </div>
                     <CardTitle className="text-3xl font-bold text-center">Create Account</CardTitle>
                     <CardDescription className="text-center">
-                        Start your learning journey with AI Study Planner
+                        Start your learning journey with StudyItUp
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

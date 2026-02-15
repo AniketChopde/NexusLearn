@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuizStore } from '../stores/quizStore';
-import { useStudyPlanStore } from '../stores/studyPlanStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -12,7 +11,6 @@ import {
     Target, Award, AlertTriangle, Lightbulb, History
 } from 'lucide-react';
 import { formatTime } from '../lib/utils';
-import toast from 'react-hot-toast';
 
 export const QuizPage: React.FC = () => {
     const navigate = useNavigate();
@@ -31,7 +29,9 @@ export const QuizPage: React.FC = () => {
         nextQuestion,
         previousQuestion,
         resetQuiz,
+
         fetchHistory,
+        loadQuizResult,
         isLoading,
     } = useQuizStore();
 
@@ -49,7 +49,17 @@ export const QuizPage: React.FC = () => {
 
     const hasStartedRef = React.useRef(false);
 
-    // When coming from Study Plan "Knowledge Check" with chapterId, only clear *completed* quiz (results) so we can start a new one. Do NOT clear activeQuiz or we'd reset the quiz we're taking and trigger generation again in a loop.
+    // Reset quiz on mount if we're not waiting for results or mid-quiz
+    // This fixes the issue where old results persist when coming back to "Take Quiz"
+    React.useEffect(() => {
+        // Only reset if we don't have URL params that imply continuation or specific start
+        // And if we are not already in a fresh state
+        if (!urlChapterId && !urlTopic && (activeQuiz || results)) {
+            resetQuiz();
+        }
+    }, [location.pathname, location.key]); // Run on mount/navigation
+
+    // When coming from Study Plan "Knowledge Check" with chapterId, only clear *completed* quiz (results) so we can start a new one.
     React.useEffect(() => {
         if (urlChapterId && results) {
             resetQuiz();
@@ -171,7 +181,8 @@ export const QuizPage: React.FC = () => {
                                 {quizHistory.map((entry) => (
                                     <li
                                         key={entry.id}
-                                        className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
+                                        onClick={() => loadQuizResult(entry.id)}
+                                        className="flex items-center justify-between p-4 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
                                     >
                                         <div className="min-w-0">
                                             <p className="font-bold text-foreground truncate">{entry.topic}</p>
@@ -204,7 +215,17 @@ export const QuizPage: React.FC = () => {
         const isSuccess = results.score >= 70;
         return (
             <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                <div className="mb-10 text-center space-y-2">
+                <div className="mb-10 text-center space-y-2 relative">
+                    {/* <Button
+                        variant="ghost" 
+                        onClick={() => {
+                            resetQuiz();
+                            navigate('/quiz');
+                        }}
+                        className="absolute left-0 top-0 hidden md:flex"
+                    >
+                        <ArrowRight className="h-4 w-4 mr-2 rotate-180" /> Back
+                    </Button> */}
                     <span className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-60">Performance Report</span>
                     <h1 className="text-4xl font-black">{results.topic}</h1>
                 </div>

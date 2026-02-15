@@ -1,4 +1,4 @@
-# AI Study Planner - Frontend
+# StudyItUp - Frontend
 
 A modern, interactive React-based frontend for an AI-powered study planning and learning assistant.
 

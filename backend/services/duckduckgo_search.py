@@ -156,19 +156,19 @@ class MockSearchData:
             {
                 "title": f"{topic} - Complete Tutorial and Guide",
                 "snippet": f"Comprehensive learning resources for {topic}. Includes theory, examples, and practice problems.",
-                "url": f"https://www.geeksforgeeks.org/{topic.replace(' ', '-').lower()}",
+                "url": f"https://www.geeksforgeeks.org/search?q={topic.replace(' ', '+')}",
                 "source": "mock"
             },
             {
                 "title": f"Learn {topic} - Free Online Course",
                 "snippet": f"Free video lectures and tutorials on {topic}. Self-paced learning with quizzes and assignments.",
-                "url": f"https://www.coursera.org/learn/{topic.replace(' ', '-').lower()}",
+                "url": f"https://www.coursera.org/search?query={topic.replace(' ', '%20')}",
                 "source": "mock"
             },
             {
                 "title": f"{topic} Tutorial - Step by Step Guide",
                 "snippet": f"Easy to follow tutorial covering {topic} from basics to advanced concepts with practical examples.",
-                "url": f"https://www.tutorialspoint.com/{topic.replace(' ', '_').lower()}",
+                "url": f"https://www.tutorialspoint.com/search/{topic.replace(' ', '_')}",
                 "source": "mock"
             },
             {
@@ -180,7 +180,7 @@ class MockSearchData:
             {
                 "title": f"Practice Problems - {topic}",
                 "snippet": f"Solve practice problems and exercises on {topic}. Test your understanding with interactive quizzes.",
-                "url": f"https://www.hackerrank.com/domains/{topic.replace(' ', '-').lower()}",
+                "url": f"https://www.hackerrank.com/search?q={topic.replace(' ', '+')}",
                 "source": "mock"
             }
         ]

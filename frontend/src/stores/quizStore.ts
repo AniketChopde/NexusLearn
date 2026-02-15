@@ -23,6 +23,7 @@ interface QuizState {
     resetQuiz: () => void;
     startTestCenter: (examName: string) => Promise<void>;
     generateChapterQuiz: (chapterId: string) => Promise<void>;
+    loadQuizResult: (id: string) => Promise<void>;
 }
 
 export const useQuizStore = create<QuizState>((set, get) => ({
@@ -52,6 +53,22 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         } catch (error) {
             set({ isLoading: false });
             toast.error('Failed to generate chapter quiz');
+            throw error;
+        }
+    },
+
+    loadQuizResult: async (id) => {
+        try {
+            set({ isLoading: true });
+            const response = await quizService.getResult(id);
+            set({
+                results: response.data,
+                activeQuiz: null, // Ensure we are not in "taking quiz" mode
+                isLoading: false,
+            });
+        } catch (error) {
+            set({ isLoading: false });
+            toast.error('Failed to load quiz result');
             throw error;
         }
     },

@@ -10,12 +10,16 @@ import {
     Menu,
     X,
     ShieldCheck,
+    Brain,
+    BarChart,
 } from 'lucide-react';
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Study Plans', href: '/study-plans', icon: BookOpen },
     { name: 'Learning Chat', href: '/chat', icon: MessageSquare },
+    { name: 'Take Quiz', href: '/quiz', icon: Brain },
+    { name: 'View Analytics', href: '/analytics', icon: BarChart },
     { name: 'Test Center', href: '/test-center', icon: ShieldCheck },
 ];
 
@@ -41,7 +45,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
                     <div className="fixed inset-y-0 left-0 w-64 bg-card border-r flex flex-col">
                         <div className="flex items-center justify-between p-4 border-b">
-                            <h1 className="text-xl font-bold">AI Study Planner</h1>
+                            <div className="flex items-center gap-2">
+                                <img src="/logo.png" alt="StudyItUp" className="h-12 w-12 mix-blend-multiply" />
+                                <h1 className="text-xl font-bold">StudyItUp</h1>
+                            </div>
                             <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
                                 <X className="h-5 w-5" />
                             </Button>
@@ -77,7 +84,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
                 <div className="flex flex-col flex-1 border-r bg-card">
                     <div className="flex items-center h-16 px-6 border-b">
-                        <h1 className="text-xl font-bold">AI Study Planner</h1>
+                        <div className="flex items-center gap-2">
+                            <img src="/logo.png" alt="StudyItUp" className="h-12 w-12 mix-blend-multiply" />
+                            <h1 className="text-xl font-bold">StudyItUp</h1>
+                        </div>
                     </div>
                     <nav className="flex-1 p-4 space-y-2">
                         {navigation.map((item) => (

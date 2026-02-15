@@ -11,18 +11,19 @@ import {
     ArrowLeft, GraduationCap, ChevronRight,
     PlayCircle,
     Download, ListChecks, Target as GoalIcon,
-    AlertTriangle, Lightbulb
+    AlertTriangle, Lightbulb, Archive
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Mermaid } from '../components/ui/Mermaid';
 import { TopicMindmap } from '../components/TopicMindmap';
+import { ResourcesTab } from '../components/ResourcesTab';
 
 export const StudyPlanDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { activePlan, isLoading, isTeaching, getPlan, updateChapterStatus, teachChapter } = useStudyPlanStore();
+    const { activePlan, isLoading, isTeaching, isSearchingCourses, getPlan, updateChapterStatus, teachChapter, getCourses } = useStudyPlanStore();
     const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
-    const [viewMode, setViewMode] = useState<'overview' | 'lesson' | 'syllabus'>('overview');
+    const [viewMode, setViewMode] = useState<'overview' | 'lesson' | 'syllabus' | 'courses' | 'resources'>('overview');
     const [expandedMindmaps, setExpandedMindmaps] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
@@ -30,6 +31,12 @@ export const StudyPlanDetailPage: React.FC = () => {
             getPlan(id);
         }
     }, [id, getPlan]);
+
+    useEffect(() => {
+        if (viewMode === 'courses' && activePlan && (!activePlan.recommended_courses || activePlan.recommended_courses.length === 0)) {
+            getCourses(activePlan.id.toString());
+        }
+    }, [viewMode, activePlan, getCourses]);
 
     useEffect(() => {
         if (activePlan?.chapters && activePlan.chapters.length > 0 && !selectedChapterId) {
@@ -156,6 +163,20 @@ export const StudyPlanDetailPage: React.FC = () => {
                             >
                                 <ListChecks className="h-3.5 w-3.5 mr-2" />
                                 Syllabus
+                            </button>
+                            <button
+                                onClick={() => setViewMode('courses')}
+                                className={`flex-1 flex items-center justify-center py-2.5 rounded-xl text-xs font-bold transition-all ${viewMode === 'courses' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+                            >
+                                <Video className="h-3.5 w-3.5 mr-2" />
+                                Courses
+                            </button>
+                            <button
+                                onClick={() => setViewMode('resources')}
+                                className={`flex-1 flex items-center justify-center py-2.5 rounded-xl text-xs font-bold transition-all ${viewMode === 'resources' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:bg-muted'}`}
+                            >
+                                <Archive className="h-3.5 w-3.5 mr-2" />
+                                Resources
                             </button>
                         </div>
                     </div>
@@ -345,7 +366,7 @@ export const StudyPlanDetailPage: React.FC = () => {
                                 </CardContent>
                             </Card>
                         </div>
-                    ) : selectedChapter ? (
+                    ) : (selectedChapter && (viewMode === 'overview' || viewMode === 'lesson')) ? (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             {viewMode === 'overview' ? (
                                 <Card className="border-none shadow-2xl bg-card rounded-[2rem] overflow-hidden">
@@ -451,7 +472,7 @@ export const StudyPlanDetailPage: React.FC = () => {
                                                 </div>
 
                                                 <div className="space-y-16">
-                                                    {selectedChapter.content.topic_lessons.map((lesson: any, i: number) => (
+                                                    {(selectedChapter.content.topic_lessons || []).map((lesson: any, i: number) => (
                                                         <div key={i} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: `${i * 100}ms` }}>
                                                             <div className="flex items-center justify-between">
                                                                 <div className="flex items-center gap-3">
@@ -637,6 +658,96 @@ export const StudyPlanDetailPage: React.FC = () => {
                                 </div>
                             )}
                         </div>
+                    ) : viewMode === 'courses' ? (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
+                            <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-card">
+                                <CardHeader className="p-8 pb-4">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
+                                            <Video size={24} />
+                                        </div>
+                                        <div>
+                                            <CardTitle className="text-2xl font-black">Recommended Courses</CardTitle>
+                                            <CardDescription>Curated high-quality video courses and playlists for {activePlan.exam_type}</CardDescription>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent className="p-8 pt-4">
+                                    {(activePlan.recommended_courses && activePlan.recommended_courses.length > 0) ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {activePlan.recommended_courses.map((course: any, i: number) => (
+                                                <a 
+                                                    key={i} 
+                                                    href={course.url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="group relative flex flex-col p-6 bg-muted/20 rounded-[2rem] border border-border/50 hover:bg-muted/40 transition-all hover:-translate-y-1 hover:shadow-lg"
+                                                >
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${
+                                                            course.platform === 'YouTube' ? 'bg-red-500/10 text-red-600' : 
+                                                            course.platform === 'Coursera' ? 'bg-blue-500/10 text-blue-600' :
+                                                            'bg-primary/10 text-primary'
+                                                        }`}>
+                                                            {course.platform}
+                                                        </div>
+                                                        <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center border border-border group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                                            <ChevronRight size={16} />
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <h3 className="text-lg font-bold leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                                                        {course.title}
+                                                    </h3>
+                                                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+                                                        {course.description}
+                                                    </p>
+                                                    
+                                                    <div className="mt-auto flex items-center gap-2 text-xs font-bold text-muted-foreground group-hover:text-primary/70">
+                                                        <PlayCircle size={14} />
+                                                        Start Learning
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ) : isSearchingCourses ? (
+                                        <div className="text-center py-12 space-y-4">
+                                            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto animate-pulse">
+                                                <Sparkles className="h-8 w-8 text-muted-foreground/50" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-muted-foreground">Curating Recommendations...</h3>
+                                                <p className="text-sm text-muted-foreground/60">Our AI agent is searching for the best courses for you. This may take a few seconds.</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12 space-y-4">
+                                            <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                                                <AlertTriangle className="h-8 w-8 text-muted-foreground/30" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-muted-foreground">No Courses Found</h3>
+                                                <p className="text-sm text-muted-foreground/60">We couldn't find any specific courses for this exam right now.</p>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    className="mt-4"
+                                                    onClick={() => getCourses(activePlan.id.toString())}
+                                                >
+                                                    Try Again
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+                    ) : viewMode === 'resources' ? (
+                        <ResourcesTab 
+                            planId={activePlan.id.toString()} 
+                            resources={activePlan.plan_metadata?.resources || []}
+                            onResourceAdded={() => id && getPlan(id)} 
+                        />
                     ) : (
                         <div className="h-full min-h-[500px] flex flex-col items-center justify-center border-4 border-dashed border-muted rounded-[3rem] p-12 text-center bg-muted/5 transition-all hover:bg-muted/10">
                             <div className="max-w-xs space-y-4">

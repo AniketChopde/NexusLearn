@@ -25,6 +25,7 @@ class StudyPlan(Base):
     daily_hours = Column(Integer, nullable=False)
     status = Column(String(50), default="active")  # active, completed, paused
     current_knowledge = Column(JSON, default={})
+    recommended_courses = Column(JSON, default=[])  # List of recommended courses
     plan_metadata = Column(JSON, default={})
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -131,6 +132,7 @@ class StudyPlanResponse(BaseModel):
     daily_hours: int
     status: str
     current_knowledge: Dict[str, Any]
+    recommended_courses: List[Dict[str, Any]] = []
     chapters: List[ChapterResponse]
     plan_metadata: Optional[Dict[str, Any]] = None
     created_at: datetime

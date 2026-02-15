@@ -81,7 +81,7 @@ export const DashboardPage: React.FC = () => {
     ];
 
     const quickActions = [
-        { name: 'Start Learning', href: '/chat', icon: MessageSquare, color: 'bg-blue-500' },
+        { name: 'Learning Chat', href: '/chat', icon: MessageSquare, color: 'bg-blue-500' },
         { name: 'Take Quiz', href: '/quiz', icon: Brain, color: 'bg-purple-500' },
         { name: 'Create Plan', href: '/study-plans/create', icon: BookOpen, color: 'bg-green-500' },
         { name: 'View Analytics', href: '/analytics', icon: TrendingUp, color: 'bg-orange-500' },

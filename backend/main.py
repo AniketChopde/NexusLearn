@@ -58,6 +58,12 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
+# Mount static files
+from fastapi.staticfiles import StaticFiles
+import os
+os.makedirs("static/uploads", exist_ok=True)
+app.mount("/api/static", StaticFiles(directory="static"), name="static")
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
