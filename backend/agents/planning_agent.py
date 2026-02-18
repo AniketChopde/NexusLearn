@@ -61,7 +61,7 @@ class PlanningAgent:
             days_until_exam = max(1, days_until_exam)
             total_hours = days_until_exam * daily_hours
             
-            system_prompt = f"""You are an expert study planner specializing in competitive exam preparation.
+            system_prompt = f"""You are an expert study planner. You help learners with any goal: exams (GATE, UPSC, etc.), skills (Machine Learning, LangChain, React), or general subjects.
             Analyze the user's goal and provide a structured assessment.
             
             Return your response as a JSON object with the following structure:
@@ -80,8 +80,8 @@ class PlanningAgent:
             
             user_prompt = f"""
             Goal: {goal}
-            Exam Type: {exam_type}
-            Days Until Exam: {days_until_exam}
+            Learning topic / exam: {exam_type}
+            Days until target date: {days_until_exam}
             Daily Study Hours: {daily_hours}
             Total Available Hours: {total_hours}
             Current Knowledge: {json.dumps(current_knowledge or {}, indent=2)}
@@ -141,22 +141,22 @@ class PlanningAgent:
             if fast_learn:
                 fast_learn_instruction = """
                 FAST LEARN MODE (CRITICAL):
-                - Prioritize ONLY topics with high weightage in the exam.
-                - Skip low-weightage or optional topics.
-                - Focus on maximizing score in minimum time.
+                - Prioritize ONLY core and foundational topics.
+                - Skip optional or advanced topics that can be learned later.
+                - Focus on covering essentials in minimum time while keeping a logical learning path.
                 - Ensure even with fewer topics, the pedagogical sequence remains logical.
                 """
             
             system_prompt = f"""ROLE: Expert Pedagogical Planner Agent
             
             INPUT:
-            - Exam name: {exam_type}
-            - User level & Goal: {goal or "General Prep"}
+            - Learning goal / topic (can be an exam name or any subject): {exam_type}
+            - User level & Goal: {goal or "Master the topic"}
             - Available time: {days_until_exam} days
-            - Mode: {'Fast Learn (High Weightage)' if fast_learn else 'Standard'}
+            - Mode: {'Fast Learn (Core-first)' if fast_learn else 'Standard'}
             
             TASK:
-            Generate a module-wise syllabus-aligned study plan for {exam_type}.
+            Generate a module-wise learning path for {exam_type}. The goal may be an exam (e.g. GATE, UPSC), a skill (e.g. Machine Learning, LangChain), or any subject—structure the plan accordingly.
             {fast_learn_instruction}
             
             CRITICAL SEQUENCING RULES:
@@ -164,7 +164,7 @@ class PlanningAgent:
             2. Master building blocks before tackling complex topics.
             
             CONSTRAINTS:
-            - If Syllabus data is provided, use it. IF NOT, use your internal expertise to determine the standard syllabus for {exam_type}.
+            - If syllabus/curriculum data is provided, use it. IF NOT, use your internal expertise to determine a standard learning path for {exam_type} (whether exam syllabus, course outline, or skill roadmap).
             - Do NOT add extra unrelated topics.
             - Do NOT use internet.
             
@@ -190,11 +190,11 @@ class PlanningAgent:
             """
             
             user_prompt = f"""
-            Exam Type: {exam_type}
-            User Goal: {goal or f"Prepare for {exam_type}"}
-            Days Until Exam: {days_until_exam}
+            Learning goal / topic: {exam_type}
+            User Goal: {goal or f"Learn {exam_type}"}
+            Days until target date: {days_until_exam}
             Daily Study Hours: {daily_hours}
-            Syllabus: {json.dumps(syllabus_data, indent=2) if syllabus_data else "Determine standard syllabus based on your knowledge"}
+            Syllabus/curriculum (if any): {json.dumps(syllabus_data, indent=2) if syllabus_data else "Determine standard learning path or syllabus based on your knowledge"}
             Current Knowledge: {json.dumps(current_knowledge or {}, indent=2)}
             
             Generate the structured module-wise study plan.

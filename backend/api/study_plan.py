@@ -29,9 +29,9 @@ async def create_study_plan(
 ):
     """Create a comprehensive study plan using multi-agent system."""
     try:
-        # Use orchestrator to create comprehensive plan
+        # Use orchestrator to create comprehensive plan (exam_type can be any learning goal: ML, LangChain, UPSC, etc.)
         result = await orchestrator.handle_exam_preparation(
-            user_goal=f"Prepare for {plan_data.exam_type}",
+            user_goal=f"Learn {plan_data.exam_type}",
             exam_type=plan_data.exam_type,
             target_date=plan_data.target_date,
             daily_hours=plan_data.daily_hours,

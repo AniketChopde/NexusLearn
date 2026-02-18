@@ -116,12 +116,12 @@ class ChapterResponse(BaseModel):
 
 
 class StudyPlanCreate(BaseModel):
-    """Schema for creating a study plan."""
-    exam_type: str = Field(..., description="Type of exam (e.g., GATE_IT, JEE, NEET)")
-    target_date: date = Field(..., description="Target exam date")
+    """Schema for creating a study plan. Works for any learning goal: exams, skills (e.g. ML, LangChain), or subjects."""
+    exam_type: str = Field(..., description="Learning goal or topic (e.g. Machine Learning, LangChain, UPSC, GATE CS)")
+    target_date: date = Field(..., description="Target completion date")
     daily_hours: int = Field(..., ge=1, le=24, description="Daily study hours")
     current_knowledge: Dict[str, Any] = Field(default_factory=dict)
-    fast_learn: bool = Field(default=False, description="Whether to prioritize high-weightage topics")
+    fast_learn: bool = Field(default=False, description="Whether to prioritize core/foundational topics first")
 
 
 class StudyPlanResponse(BaseModel):

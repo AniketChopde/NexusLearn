@@ -39,10 +39,12 @@ apiClient.interceptors.request.use(
 // Single in-flight refresh: avoid multiple 401s all triggering refresh at once
 let refreshPromise: Promise<string | null> | null = null;
 
-function clearAuthAndRedirect() {
+function clearAuthAndRedirect(reason?: string) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('auth-storage'); // clear persisted auth state so reload shows login
+    if (reason) toast.error(reason);
     window.location.href = '/login';
 }
 
@@ -61,7 +63,7 @@ apiClient.interceptors.response.use(
 
         // If this 401 is FROM the refresh call itself, do not try to refresh again (prevents loop)
         if (error.response?.status === 401 && isRefreshRequest(originalRequest)) {
-            clearAuthAndRedirect();
+            clearAuthAndRedirect('Session expired. Please sign in again.');
             return Promise.reject(error);
         }
 
@@ -71,7 +73,7 @@ apiClient.interceptors.response.use(
 
             const refreshToken = localStorage.getItem('refresh_token');
             if (!refreshToken) {
-                clearAuthAndRedirect();
+                clearAuthAndRedirect('Session expired. Please sign in again.');
                 return Promise.reject(error);
             }
 
@@ -105,18 +107,24 @@ apiClient.interceptors.response.use(
                 }
             } catch (refreshError) {
                 refreshPromise = null;
-                clearAuthAndRedirect();
+                clearAuthAndRedirect('Session expired. Please sign in again.');
                 return Promise.reject(refreshError);
             }
         }
 
-        // Handle other errors
+        // Server unreachable or 5xx: logout so user isn't stuck with a broken UI
+        const status = error.response?.status;
+        const isServerError = status != null && status >= 500;
+        const isNetworkError = !error.response || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED';
+        if (isServerError || isNetworkError) {
+            clearAuthAndRedirect('Server unavailable. Please sign in again.');
+            return Promise.reject(error);
+        }
+
+        // Handle other errors (4xx etc.) – show toast only, stay logged in
         const errorData = error.response?.data as any;
         const errorMessage = errorData?.detail || errorData?.message || error.message || 'An error occurred';
-
-        if (error.response?.status !== 401) {
-            toast.error(errorMessage);
-        }
+        toast.error(errorMessage);
 
         return Promise.reject(error);
     }

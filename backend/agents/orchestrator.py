@@ -34,10 +34,10 @@ class AgentOrchestrator:
         fast_learn: bool = False
     ) -> Dict[str, Any]:
         """
-        Complete exam preparation workflow.
+        Create a study plan for any learning goal (exam, skill, or subject).
         """
         try:
-            logger.info(f"Starting exam preparation workflow for {exam_type} (Fast Learn: {fast_learn})")
+            logger.info(f"Starting study plan workflow for {exam_type} (Fast Learn: {fast_learn})")
             
             # Step 1: Skip internet search for syllabus as per user request (User wants LLM-only)
             logger.info("Step 1: Using LLM internal knowledge for syllabus (Internet search skipped)...")
@@ -46,7 +46,7 @@ class AgentOrchestrator:
             # Step 2: Analyze goal and feasibility
             logger.info("Step 2: Analyzing user goal...")
             goal_analysis = await planning_agent.analyze_user_goal(
-                goal=user_goal or f"Prepare for {exam_type} by {target_date} with {daily_hours} hours daily",
+                goal=user_goal or f"Learn {exam_type} by {target_date} with {daily_hours} hours daily",
                 exam_type=exam_type,
                 target_date=target_date,
                 daily_hours=daily_hours,
@@ -79,7 +79,7 @@ class AgentOrchestrator:
                 "created_at": datetime.utcnow().isoformat()
             }
             
-            logger.info("Exam preparation workflow completed successfully")
+            logger.info("Study plan workflow completed successfully")
             return result
             
         except Exception as e:

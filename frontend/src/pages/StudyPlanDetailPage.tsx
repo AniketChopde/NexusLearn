@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { Mermaid } from '../components/ui/Mermaid';
 import { TopicMindmap } from '../components/TopicMindmap';
 import { ResourcesTab } from '../components/ResourcesTab';
+import { downloadStudyPlanPdf } from '../lib/studyPlanPdf';
 
 export const StudyPlanDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -59,14 +60,7 @@ export const StudyPlanDetailPage: React.FC = () => {
 
     const handleDownload = () => {
         if (!activePlan) return;
-        const planData = JSON.stringify(activePlan, null, 2);
-        const blob = new Blob([planData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${activePlan.exam_type}_study_plan.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        downloadStudyPlanPdf(activePlan);
     };
 
     if (isLoading && !activePlan) {

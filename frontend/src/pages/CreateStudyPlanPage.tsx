@@ -10,8 +10,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Target, Calendar, Clock, Sparkles } from 'lucide-react';
 
 const createPlanSchema = z.object({
-    exam_type: z.string().min(2, 'Exam type is required (e.g., GATE, JEE)'),
-    target_date: z.string().min(1, 'Target date is required'),
+    exam_type: z.string().min(2, 'Learning goal or topic is required'),
+    target_date: z.string().min(1, 'Target completion date is required'),
     daily_hours: z.number().min(1).max(24),
     fast_learn: z.boolean().default(false),
 });
@@ -78,15 +78,15 @@ export const CreateStudyPlanPage: React.FC = () => {
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="space-y-4">
                             <Input
-                                label="What exam are you preparing for?"
-                                placeholder="e.g. GATE Computer Science, UPSC, SAT"
+                                label="What do you want to learn?"
+                                placeholder="e.g. Machine Learning, LangChain, UPSC, GATE CS, React"
                                 icon={<Target className="h-4 w-4" />}
                                 error={errors.exam_type?.message}
                                 {...register('exam_type')}
                             />
 
                             <Input
-                                label="When is the exam date?"
+                                label="Target completion date"
                                 type="date"
                                 icon={<Calendar className="h-4 w-4" />}
                                 error={errors.target_date?.message}
@@ -118,7 +118,7 @@ export const CreateStudyPlanPage: React.FC = () => {
                                             {isFastLearn && <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full uppercase">Enabled</span>}
                                         </div>
                                         <p className="text-xs text-muted-foreground font-medium mt-1">
-                                            Focus only on high-weightage topics. Skip low-priority content to maximize score in minimum time. Ideal for short-term preparation.
+                                            Focus on core and foundational topics first. Skip optional or advanced content to cover essentials in less time. Ideal when you have a deadline or want a quick overview.
                                         </p>
                                     </div>
                                 </label>
@@ -133,14 +133,14 @@ export const CreateStudyPlanPage: React.FC = () => {
                             <ul className="text-sm space-y-2 text-muted-foreground">
                                 {isFastLearn ? (
                                     <>
-                                        <li>• Weightage-based topic prioritization</li>
+                                        <li>• Core-first topic prioritization</li>
                                         <li>• Compressed timeline for quick coverage</li>
-                                        <li>• Focus on frequent exam patterns</li>
-                                        <li>• Smart resource discovery for core topics</li>
+                                        <li>• Focus on must-know concepts before advanced topics</li>
+                                        <li>• Smart resource discovery for essential topics</li>
                                     </>
                                 ) : (
                                     <>
-                                        <li>• Personalized topic breakdown based on exam pattern</li>
+                                        <li>• Personalized topic breakdown and learning path</li>
                                         <li>• Smart resource discovery (videos, notes, articles)</li>
                                         <li>• Adaptive scheduling based on your daily hours</li>
                                         <li>• Integrated progress tracking and gap analysis</li>
