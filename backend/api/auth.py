@@ -9,7 +9,7 @@ from loguru import logger
 
 from database.connection import get_db
 from models.user import User, UserCreate, UserLogin, UserResponse, TokenResponse
-from utils.auth import hash_password, verify_password, create_token_pair, get_current_user, TokenData
+from utils.auth import hash_password, verify_password, create_token_pair, get_current_user, get_current_refresh_user, TokenData
 
 router = APIRouter()
 
@@ -166,7 +166,7 @@ async def get_profile(
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    current_user: TokenData = Depends(get_current_user)
+    current_user: TokenData = Depends(get_current_refresh_user)
 ):
     """
     Refresh access token using refresh token.
@@ -187,4 +187,109 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Token refresh failed"
+        )
+
+
+# Password Reset Schemas
+from pydantic import BaseModel, EmailStr
+from datetime import datetime, timedelta
+import uuid
+from utils.email import EmailService
+from config import settings
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Request a password reset email.
+    """
+    try:
+        # Find user
+        result = await db.execute(
+            select(User).where(User.email == request.email)
+        )
+        user = result.scalar_one_or_none()
+        
+        # Security: Always return success even if user not found to prevent enumeration
+        if not user:
+            logger.info(f"Password reset requested for non-existent email: {request.email}")
+            return {"message": "If this email is registered, you will receive a password reset link."}
+            
+        # Generate token
+        token = str(uuid.uuid4())
+        user.reset_token = token
+        user.reset_token_expires = datetime.utcnow() + timedelta(minutes=30)
+        
+        await db.commit()
+        
+        # Send email
+        email_service = EmailService()
+        # Use configured frontend URL
+        host = settings.frontend_url
+        
+        await email_service.send_reset_password_email(user.email, token, host)
+        
+        return {"message": "If this email is registered, you will receive a password reset link."}
+        
+    except Exception as e:
+        logger.error(f"Error in forgot_password: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process request"
+        )
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(
+    request: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Reset password using a valid token.
+    """
+    try:
+        # Find user by token
+        result = await db.execute(
+            select(User).where(User.reset_token == request.token)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired token"
+            )
+            
+        # Check expiry
+        if user.reset_token_expires < datetime.utcnow():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token has expired"
+            )
+            
+        # Update password
+        user.password_hash = hash_password(request.new_password)
+        user.reset_token = None
+        user.reset_token_expires = None
+        
+        await db.commit()
+        
+        logger.info(f"Password reset successful for user: {user.email}")
+        return {"message": "Password reset successful"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in reset_password: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset password"
         )

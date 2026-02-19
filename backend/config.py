@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     debug: bool = False
     allowed_origins: str = "http://localhost:3000,http://20.81.196.215:5173"
+    frontend_url: str = Field(default="http://localhost:5173", alias="FRONTEND_URL")
     
     # Azure OpenAI Configuration (Chat/LLM)
     azure_openai_endpoint: str = Field(..., alias="AZURE_OPENAI_ENDPOINT")
@@ -58,6 +59,16 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
     log_file: str = "logs/app.log"
+    
+    # Email Configuration
+    mail_username: str = Field(default="", alias="SMTP_USER")
+    mail_password: str = Field(default="", alias="SMTP_PASSWORD")
+    mail_from: str = Field(default="", alias="SMTP_FROM")
+    mail_port: int = Field(default=587, alias="SMTP_PORT")
+    mail_server: str = Field(default="", alias="SMTP_HOST")
+    mail_starttls: bool = True
+    mail_ssl_tls: bool = False
+    use_credentials: bool = True
     
     # Celery Configuration
     celery_broker_url: str = "redis://localhost:6379/1"

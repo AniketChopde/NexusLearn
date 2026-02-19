@@ -13,6 +13,8 @@ import { CreateStudyPlanPage } from './pages/CreateStudyPlanPage';
 import { StudyPlansPage } from './pages/StudyPlansPage';
 import { StudyPlanDetailPage } from './pages/StudyPlanDetailPage';
 import { Loading } from './components/ui/Loading';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,7 +66,7 @@ function App() {
 
   React.useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
       if (token) {
         try {
           await fetchProfile();
@@ -115,6 +117,22 @@ function App() {
           element={
             <PublicRoute>
               <RegisterPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPasswordPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPasswordPage />
             </PublicRoute>
           }
         />

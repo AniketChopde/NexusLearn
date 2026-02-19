@@ -25,7 +25,7 @@ apiClient.interceptors.request.use(
             return config;
         }
 
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
         if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -43,8 +43,13 @@ function clearAuthAndRedirect(reason?: string) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+<<<<<<< HEAD
     localStorage.removeItem('auth-storage'); // clear persisted auth state so reload shows login
     if (reason) toast.error(reason);
+=======
+    sessionStorage.removeItem('access_token');
+    sessionStorage.removeItem('refresh_token');
+>>>>>>> origin/updatestudyitup
     window.location.href = '/login';
 }
 
@@ -60,20 +65,39 @@ apiClient.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const status = error.response?.status;
+        const url = originalRequest?.url;
+
+        console.debug(`[API Error] Status: ${status} | URL: ${url}`, error.response?.data);
 
         // If this 401 is FROM the refresh call itself, do not try to refresh again (prevents loop)
+<<<<<<< HEAD
         if (error.response?.status === 401 && isRefreshRequest(originalRequest)) {
             clearAuthAndRedirect('Session expired. Please sign in again.');
+=======
+        if (status === 401 && isRefreshRequest(originalRequest)) {
+            console.error('[API] Refresh token expired or invalid. Redirecting to login.');
+            clearAuthAndRedirect();
+>>>>>>> origin/updatestudyitup
             return Promise.reject(error);
         }
 
         // Handle 401 Unauthorized - Token expired (for normal API calls)
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (status === 401 && !originalRequest._retry) {
+            console.debug('[API] Access token expired. Attempting refresh...');
             originalRequest._retry = true;
 
-            const refreshToken = localStorage.getItem('refresh_token');
+            const localRefresh = localStorage.getItem('refresh_token');
+            const sessionRefresh = sessionStorage.getItem('refresh_token');
+            const refreshToken = localRefresh || sessionRefresh;
+
             if (!refreshToken) {
+<<<<<<< HEAD
                 clearAuthAndRedirect('Session expired. Please sign in again.');
+=======
+                console.warn('[API] No refresh token available. Redirecting.');
+                clearAuthAndRedirect();
+>>>>>>> origin/updatestudyitup
                 return Promise.reject(error);
             }
 
@@ -91,8 +115,16 @@ apiClient.interceptors.response.use(
                                 } as InternalAxiosRequestConfig
                             );
                             const { access_token, refresh_token: newRefresh } = response.data;
-                            localStorage.setItem('access_token', access_token);
-                            localStorage.setItem('refresh_token', newRefresh);
+
+                            if (localRefresh) {
+                                localStorage.setItem('access_token', access_token);
+                                localStorage.setItem('refresh_token', newRefresh);
+                            } else {
+                                sessionStorage.setItem('access_token', access_token);
+                                sessionStorage.setItem('refresh_token', newRefresh);
+                            }
+
+                            console.debug('[API] Token refresh successful.');
                             return access_token;
                         } finally {
                             refreshPromise = null;
@@ -106,6 +138,7 @@ apiClient.interceptors.response.use(
                     return apiClient(originalRequest);
                 }
             } catch (refreshError) {
+                console.error('[API] Token refresh failed:', refreshError);
                 refreshPromise = null;
                 clearAuthAndRedirect('Session expired. Please sign in again.');
                 return Promise.reject(refreshError);
@@ -124,7 +157,21 @@ apiClient.interceptors.response.use(
         // Handle other errors (4xx etc.) – show toast only, stay logged in
         const errorData = error.response?.data as any;
         const errorMessage = errorData?.detail || errorData?.message || error.message || 'An error occurred';
+<<<<<<< HEAD
         toast.error(errorMessage);
+=======
+
+        // Filter out 401s from toasting (handled above or ignored during refresh flow)
+        // Also handling 403 explicitly if that's what user sees as "Not authenticated"
+        if (status !== 401) {
+            // For 404s on API endpoints, it might mean Nginx misconfig or wrong URL.
+            // We should still toast but maybe clarify?
+            if (status === 404 && url?.includes('/api/')) {
+                console.error('[API] 404 Not Found. Potential Nginx/URL issue.');
+            }
+            toast.error(errorMessage);
+        }
+>>>>>>> origin/updatestudyitup
 
         return Promise.reject(error);
     }

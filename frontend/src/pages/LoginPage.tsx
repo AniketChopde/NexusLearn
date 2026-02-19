@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
+    rememberMe: z.boolean().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -19,16 +20,31 @@ export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const { login, isLoading } = useAuthStore();
 
+    const rememberedEmail = localStorage.getItem('remembered_email');
+    const rememberedPassword = localStorage.getItem('remembered_password');
+
     const {
         register,
         handleSubmit,
         formState: { errors },
     } = useForm<LoginFormData>({
         resolver: zodResolver(loginSchema),
+        defaultValues: {
+            email: rememberedEmail || '',
+            password: rememberedPassword || '',
+            rememberMe: !!rememberedEmail,
+        }
     });
 
     const onSubmit = async (data: LoginFormData) => {
         try {
+            if (data.rememberMe) {
+                localStorage.setItem('remembered_email', data.email);
+                localStorage.setItem('remembered_password', data.password);
+            } else {
+                localStorage.removeItem('remembered_email');
+                localStorage.removeItem('remembered_password');
+            }
             await login(data);
             navigate('/dashboard');
         } catch (error) {
@@ -65,6 +81,25 @@ export const LoginPage: React.FC = () => {
                             error={errors.password?.message}
                             {...register('password')}
                         />
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="checkbox"
+                                    id="rememberMe"
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    {...register('rememberMe')}
+                                />
+                                <label htmlFor="rememberMe" className="text-sm text-gray-500 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Remember me
+                                </label>
+                            </div>
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm font-medium text-primary hover:underline"
+                            >
+                                Forgot password?
+                            </Link>
+                        </div>
                         <Button type="submit" className="w-full" isLoading={isLoading}>
                             Sign In
                         </Button>
