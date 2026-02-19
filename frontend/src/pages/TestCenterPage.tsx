@@ -245,44 +245,44 @@ export const TestCenterPage: React.FC = () => {
     // 3. Active Test View
     if (activeQuiz && currentQ) {
         return (
-            <div className="max-w-6xl mx-auto py-8 px-4 animate-in fade-in duration-700">
+            <div className="max-w-5xl mx-auto py-6 px-4 animate-in fade-in duration-700">
                 {/* Fixed Timer Header */}
-                <div className="sticky top-4 z-50 mb-8 p-6 bg-card/80 backdrop-blur-2xl border-2 border-primary/20 rounded-[2.5rem] shadow-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="text-center bg-primary text-primary-foreground p-2 rounded-xl h-12 w-12 flex items-center justify-center text-xl font-black">
+                <div className="sticky top-4 z-50 mb-6 p-4 bg-card/90 backdrop-blur-md border border-primary/10 rounded-2xl shadow-lg flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="text-center bg-primary text-primary-foreground p-2 rounded-lg h-10 w-10 flex items-center justify-center text-lg font-bold">
                             {currentQuestion + 1}
                         </div>
                         <div>
-                            <h3 className="font-black uppercase tracking-tight text-sm">Question {currentQuestion + 1} of {activeQuiz.questions.length}</h3>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{activeQuiz.topic} Simulation</p>
+                            <h3 className="font-bold uppercase tracking-tight text-xs">Question {currentQuestion + 1} of {activeQuiz.questions.length}</h3>
+                            <p className="text-[10px] font-medium text-muted-foreground uppercase">{activeQuiz.topic}</p>
                         </div>
                     </div>
 
-                    <div className={`flex items-center gap-4 px-8 py-3 rounded-2xl border-2 transition-colors ${timeLeft !== null && timeLeft < 300 ? 'bg-red-500/10 border-red-500 text-red-600 animate-pulse' : 'bg-muted/50 border-border/50'}`}>
-                        <Timer className="h-6 w-6" />
-                        <span className="text-3xl font-black tabular-nums">{timeLeft !== null ? formatTime(timeLeft) : '--:--'}</span>
+                    <div className={`flex items-center gap-3 px-6 py-2 rounded-xl border transition-colors ${timeLeft !== null && timeLeft < 300 ? 'bg-red-500/10 border-red-500 text-red-600 animate-pulse' : 'bg-muted/30 border-border/50'}`}>
+                        <Timer className="h-5 w-5" />
+                        <span className="text-2xl font-bold tabular-nums">{timeLeft !== null ? formatTime(timeLeft) : '--:--'}</span>
                     </div>
 
-                    <Button onClick={handleManualSubmit} variant="outline" className="rounded-xl border-2 font-black uppercase text-xs">
+                    <Button onClick={handleManualSubmit} variant="ghost" size="sm" className="rounded-lg font-bold uppercase text-[10px] hover:bg-destructive/10 hover:text-destructive">
                         Early Exit
                     </Button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Progress Sidebar */}
-                    <div className="hidden lg:block space-y-4">
-                        <Card className="rounded-[2rem] border-none shadow-xl bg-card p-6">
-                            <h4 className="font-black uppercase text-xs mb-4 text-center">Navigator</h4>
-                            <div className="grid grid-cols-4 gap-2">
+                    <div className="hidden lg:block lg:col-span-3 space-y-4">
+                        <Card className="rounded-2xl border-none shadow-sm bg-card/50 p-4">
+                            <h4 className="font-bold uppercase text-[10px] mb-3 text-center text-muted-foreground">Navigator</h4>
+                            <div className="grid grid-cols-5 gap-2">
                                 {activeQuiz.questions.map((q, idx) => (
                                     <button
                                         key={q.question_id}
                                         onClick={() => useQuizStore.getState().goToQuestion(idx)}
-                                        className={`h-10 rounded-xl font-black text-xs transition-all ${idx === currentQuestion
-                                            ? 'bg-primary text-primary-foreground ring-4 ring-primary/20'
+                                        className={`h-8 w-8 rounded-lg font-bold text-xs flex items-center justify-center transition-all ${idx === currentQuestion
+                                            ? 'bg-primary text-primary-foreground shadow-md scale-110'
                                             : answers[q.question_id]
-                                                ? 'bg-green-500/20 text-green-600 border border-green-500/20'
-                                                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                                ? 'bg-green-500/10 text-green-700 border border-green-500/20'
+                                                : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                                             }`}
                                     >
                                         {idx + 1}
@@ -293,36 +293,37 @@ export const TestCenterPage: React.FC = () => {
                     </div>
 
                     {/* Main Question Card */}
-                    <div className="lg:col-span-3 space-y-8">
-                        <Card className="border-none shadow-2xl bg-card rounded-[3.5rem] overflow-hidden min-h-[500px] flex flex-col">
-                            <CardContent className="p-10 md:p-16 flex-1 space-y-10">
-                                <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight">
+                    <div className="lg:col-span-9 space-y-6">
+                        <Card className="border-none shadow-xl bg-card rounded-[2rem] overflow-hidden min-h-[400px] flex flex-col">
+                            <CardContent className="p-6 md:p-10 flex-1 space-y-6">
+                                <p className="text-xl md:text-2xl font-bold leading-snug tracking-tight text-foreground/90">
                                     {currentQ.question_text || currentQ.question}
                                 </p>
 
-                                <div className="grid grid-cols-1 gap-4">
+                                <div className="space-y-3">
                                     {currentQ.options.map((option, index) => {
                                         const hasPrefix = option.length > 3 && option.charAt(1) === ')';
                                         const optionLetter = hasPrefix ? option.charAt(0) : String.fromCharCode(65 + index);
                                         const optionText = hasPrefix ? option.substring(3) : option;
+                                        const isSelected = selectedAnswer === optionLetter;
 
                                         return (
                                             <button
                                                 key={index}
                                                 onClick={() => submitAnswer(currentQ.question_id, optionLetter)}
-                                                className={`group relative text-left p-8 rounded-[2rem] border-2 transition-all duration-300 ${selectedAnswer === optionLetter
-                                                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20 translate-x-1'
-                                                    : 'border-muted/50 bg-card hover:bg-muted/10 hover:border-muted-foreground/30'
+                                                className={`w-full group relative text-left p-4 rounded-xl border transition-all duration-200 ${isSelected
+                                                    ? 'border-primary bg-primary/5 shadow-inner'
+                                                    : 'border-transparent bg-muted/30 hover:bg-muted/60'
                                                     }`}
                                             >
-                                                <div className="flex items-center gap-6">
-                                                    <div className={`h-12 w-12 rounded-xl flex items-center justify-center font-black text-lg transition-colors ${selectedAnswer === optionLetter
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${isSelected
                                                         ? 'bg-primary text-primary-foreground'
-                                                        : 'bg-muted group-hover:bg-muted-foreground/10 text-muted-foreground'
+                                                        : 'bg-background text-muted-foreground border shadow-sm'
                                                         }`}>
                                                         {optionLetter}
                                                     </div>
-                                                    <span className="text-xl font-bold leading-tight flex-1">
+                                                    <span className={`text-base font-medium leading-normal flex-1 ${isSelected ? 'text-primary-foreground/90' : 'text-foreground/80'}`}>
                                                         {optionText}
                                                     </span>
                                                 </div>
@@ -332,12 +333,12 @@ export const TestCenterPage: React.FC = () => {
                                 </div>
                             </CardContent>
 
-                            <div className="p-8 border-t bg-muted/20 flex items-center justify-between">
+                            <div className="p-6 border-t bg-muted/10 flex items-center justify-between">
                                 <Button
                                     variant="ghost"
                                     onClick={previousQuestion}
                                     disabled={currentQuestion === 0}
-                                    className="rounded-xl h-12 font-black px-8 uppercase text-xs"
+                                    className="rounded-xl h-10 font-bold px-6 text-xs"
                                 >
                                     Previous
                                 </Button>
@@ -345,17 +346,17 @@ export const TestCenterPage: React.FC = () => {
                                 {currentQuestion < activeQuiz.questions.length - 1 ? (
                                     <Button
                                         onClick={nextQuestion}
-                                        className="rounded-2xl h-14 px-12 font-black uppercase tracking-widest shadow-xl shadow-primary/20"
+                                        className="rounded-xl h-10 px-8 font-bold uppercase text-xs tracking-wide shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
                                     >
-                                        Next Item <ArrowRight size={18} className="ml-2" />
+                                        Next <ArrowRight size={16} className="ml-2" />
                                     </Button>
                                 ) : (
                                     <Button
                                         onClick={handleManualSubmit}
                                         isLoading={isLoading}
-                                        className="rounded-2xl h-14 px-12 font-black uppercase tracking-widest bg-green-600 hover:bg-green-700 shadow-xl shadow-green-500/20"
+                                        className="rounded-xl h-10 px-8 font-bold uppercase text-xs tracking-wide bg-green-600 hover:bg-green-700 shadow-lg shadow-green-500/20 hover:shadow-green-500/30 transition-all"
                                     >
-                                        Submit Final Result <Award size={18} className="ml-2" />
+                                        Submit <Award size={16} className="ml-2" />
                                     </Button>
                                 )}
                             </div>

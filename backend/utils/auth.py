@@ -113,12 +113,13 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 
-def decode_token(token: str) -> TokenData:
+def decode_token(token: str, required_type: Optional[str] = None) -> TokenData:
     """
     Decode and validate a JWT token.
     
     Args:
         token: JWT token to decode
+        required_type: Optional token type to enforce ('access' or 'refresh')
     
     Returns:
         TokenData with user information
@@ -135,11 +136,19 @@ def decode_token(token: str) -> TokenData:
         
         user_id: str = payload.get("sub")
         email: str = payload.get("email")
+        token_type: str = payload.get("type")
         
         if user_id is None or email is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token payload",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        if required_type and token_type != required_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid token type. Expected {required_type}",
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
@@ -157,20 +166,17 @@ def decode_token(token: str) -> TokenData:
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> TokenData:
-    """
-    Dependency to get current authenticated user from token.
-    
-    Args:
-        credentials: HTTP Authorization credentials
-    
-    Returns:
-        TokenData with user information
-    
-    Raises:
-        HTTPException: If authentication fails
-    """
+    """Dependency to get current authenticated user from ACCESS token."""
     token = credentials.credentials
-    return decode_token(token)
+    return decode_token(token, required_type="access")
+
+
+async def get_current_refresh_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> TokenData:
+    """Dependency to get current authenticated user from REFRESH token."""
+    token = credentials.credentials
+    return decode_token(token, required_type="refresh")
 
 
 def create_token_pair(user_id: uuid.UUID, email: str) -> dict:

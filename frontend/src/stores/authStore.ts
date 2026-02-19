@@ -29,11 +29,18 @@ export const useAuthStore = create<AuthState>()(
             login: async (credentials) => {
                 try {
                     set({ isLoading: true });
-                    const response = await authService.login(credentials);
+                    const { rememberMe, ...apiCredentials } = credentials as any; // Cast to allow extra prop
+
+                    const response = await authService.login(apiCredentials);
                     const { access_token, refresh_token } = response.data;
 
-                    localStorage.setItem('access_token', access_token);
-                    localStorage.setItem('refresh_token', refresh_token);
+                    if (rememberMe) {
+                        localStorage.setItem('access_token', access_token);
+                        localStorage.setItem('refresh_token', refresh_token);
+                    } else {
+                        sessionStorage.setItem('access_token', access_token);
+                        sessionStorage.setItem('refresh_token', refresh_token);
+                    }
 
                     // Fetch user profile
                     const profileResponse = await authService.getProfile();
@@ -77,6 +84,8 @@ export const useAuthStore = create<AuthState>()(
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
                 localStorage.removeItem('user');
+                sessionStorage.removeItem('access_token');
+                sessionStorage.removeItem('refresh_token');
 
                 set({
                     user: null,
@@ -102,7 +111,7 @@ export const useAuthStore = create<AuthState>()(
             name: 'auth-storage',
             partialize: (state) => ({
                 user: state.user,
-                token: state.token,
+                // Do not persist token automatically, we handle it manually for Remember Me
                 isAuthenticated: state.isAuthenticated,
             }),
         }
