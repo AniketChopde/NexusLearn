@@ -86,55 +86,59 @@ export const TestCenterPage: React.FC = () => {
     // 1. Landing / Entry View
     if (!activeQuiz && !results) {
         return (
-            <div className="max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-700">
-                <div className="text-center mb-12 space-y-6">
-                    <div className="h-24 w-24 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3 shadow-inner">
-                        < ShieldCheck className="h-12 w-12 text-primary" />
+            <div className="max-w-3xl mx-auto py-10 px-4 animate-in fade-in duration-700">
+                <div className="text-center mb-8 space-y-4">
+                    <div className="h-16 w-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 transform rotate-3 shadow-inner">
+                        <ShieldCheck className="h-8 w-8 text-primary" />
                     </div>
-                    <h1 className="text-5xl font-black tracking-tighter uppercase mb-2">Exam Test Center</h1>
-                    <p className="text-muted-foreground font-semibold max-w-lg mx-auto text-lg">
+                    <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Exam Test Center</h1>
+                    <p className="text-muted-foreground font-medium max-w-lg mx-auto text-base">
                         Execute full-scale exam simulations with real rules, timers, and high-weightage topics.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                    <div className="p-8 bg-blue-500/5 border-2 border-blue-500/10 rounded-[2.5rem] space-y-4">
-                        <div className="h-12 w-12 bg-blue-500/20 rounded-2xl flex items-center justify-center">
-                            <Clock className="text-blue-600" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="p-5 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-3 hover:bg-blue-500/10 transition-colors">
+                        <div className="h-10 w-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <Clock className="text-blue-600 h-5 w-5" />
                         </div>
-                        <h3 className="text-xl font-black">Simulation Engine</h3>
-                        <p className="text-sm font-medium text-muted-foreground">
-                            We search for official exam rules and set a precise timer. The test auto-closes when time is up.
-                        </p>
+                        <div>
+                            <h3 className="text-lg font-black">Simulation Engine</h3>
+                            <p className="text-xs font-medium text-muted-foreground mt-1">
+                                We search for official exam rules and set a precise timer. The test auto-closes when time is up.
+                            </p>
+                        </div>
                     </div>
-                    <div className="p-8 bg-purple-500/5 border-2 border-purple-500/10 rounded-[2.5rem] space-y-4">
-                        <div className="h-12 w-12 bg-purple-500/20 rounded-2xl flex items-center justify-center">
-                            <Target className="text-purple-600" />
+                    <div className="p-5 bg-purple-500/5 border border-purple-500/10 rounded-2xl space-y-3 hover:bg-purple-500/10 transition-colors">
+                        <div className="h-10 w-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <Target className="text-purple-600 h-5 w-5" />
                         </div>
-                        <h3 className="text-xl font-black">Weightage Focused</h3>
-                        <p className="text-sm font-medium text-muted-foreground">
-                            AI analyzes the syllabus to prioritize hard-level questions from high-weightage chapters.
-                        </p>
+                        <div>
+                            <h3 className="text-lg font-black">Weightage Focused</h3>
+                            <p className="text-xs font-medium text-muted-foreground mt-1">
+                                AI analyzes the syllabus to prioritize hard-level questions from high-weightage chapters.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <Card className="border-none shadow-2xl bg-card rounded-[3rem] overflow-hidden p-2">
-                    <CardContent className="p-10 space-y-8">
-                        <div className="space-y-4 text-center">
-                            <p className="font-black text-xs uppercase tracking-[0.2em] text-primary">Enter Target Examination</p>
+                <Card className="border-none shadow-xl bg-card rounded-3xl overflow-hidden">
+                    <CardContent className="p-8 space-y-6">
+                        <div className="space-y-3 text-center">
+                            <p className="font-black text-[10px] uppercase tracking-[0.2em] text-primary">Enter Target Examination</p>
                             <Input
                                 placeholder="e.g. UPSC, GATE 2024, JEE Main, NEET"
                                 value={examName}
                                 onChange={(e) => setExamName(e.target.value)}
-                                className="h-20 text-2xl font-black text-center rounded-[2rem] border-4 focus:ring-8 transition-all"
+                                className="h-14 text-lg font-bold text-center rounded-xl border-2 focus:ring-4 transition-all"
                             />
                         </div>
                         <Button
                             onClick={handleStartTest}
-                            className="w-full h-20 rounded-[2rem] text-xl font-black uppercase tracking-widest shadow-2xl shadow-primary/30"
+                            className="w-full h-14 rounded-xl text-lg font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
                             isLoading={isLoading}
                         >
-                            <Play size={24} className="mr-3 fill-current" />
+                            <Play size={20} className="mr-2 fill-current" />
                             Initialize Simulation
                         </Button>
                     </CardContent>
@@ -144,92 +148,117 @@ export const TestCenterPage: React.FC = () => {
     }
 
     // 2. Results View
+    const handleDownloadReview = () => {
+        if (!results) return;
+        
+        const content = [
+            `Test Center Result: ${results.topic}`,
+            `Score: ${Math.round(results.score)}%`,
+            `Status: ${results.score >= 50 ? 'PASSED' : 'FAILED'}`,
+            `Date: ${new Date().toLocaleString()}`,
+            `----------------------------------------`,
+            `DETAILS`,
+            ...results.detailed_results.map((r, i) => `
+Item ${i + 1}: ${r.explanation}
+Your Answer: ${r.user_answer}
+Correct Answer: ${r.correct_answer}
+Result: ${r.is_correct ? 'CORRECT' : 'INCORRECT'}
+----------------------------------------`)
+        ].join('\n');
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${results.topic.replace(/\s+/g, '_')}_Result.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     if (results) {
-        const isSuccess = results.score >= 50; // Exams are harder
+        const isSuccess = results.score >= 50;
         return (
-            <div className="max-w-5xl mx-auto py-12 px-4">
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-muted font-black text-xs uppercase tracking-widest mb-4">
-                        <ShieldCheck size={16} className="text-primary" />
-                        Test Center Transcript
-                    </div>
-                    <h1 className="text-5xl font-black tracking-tight">{results.topic} Result</h1>
+            <div className="max-w-4xl mx-auto py-8 px-4">
+                <div className="text-center mb-6">
+                    <h1 className="text-2xl font-black tracking-tight">{results.topic} Result</h1>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                    <Card className={`lg:col-span-2 rounded-[3.5rem] border-none shadow-2xl overflow-hidden ${isSuccess ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
-                        <CardContent className="p-12 h-full flex flex-col justify-center">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                    <Card className={`lg:col-span-2 rounded-2xl shadow-sm border-2 overflow-hidden ${isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+                        <CardContent className="p-6 h-full flex flex-col justify-center">
                             <div className="flex items-start justify-between">
-                                <div className="space-y-4">
-                                    <h2 className="text-[120px] font-black leading-none tracking-tighter tabular-nums">
-                                        {Math.round(results.score)}<span className="text-4xl opacity-50">%</span>
+                                <div className="space-y-2">
+                                    <h2 className="text-6xl font-black leading-none tracking-tighter tabular-nums">
+                                        {Math.round(results.score)}<span className="text-3xl opacity-50">%</span>
                                     </h2>
                                     <div className="space-y-1">
-                                        <p className="text-2xl font-black uppercase">Simulation {isSuccess ? 'Passed' : 'Failed'}</p>
-                                        <p className="text-white/70 font-bold max-w-md">
+                                        <p className="text-lg font-black uppercase">Simulation {isSuccess ? 'Passed' : 'Failed'}</p>
+                                        <p className="font-medium text-sm max-w-sm opacity-80">
                                             {isSuccess
-                                                ? "You have demonstrated professional competency in this exam simulation. Keep up the momentum!"
-                                                : "This was a high-difficulty simulation. Use the insights below to bridge your knowledge gaps."}
+                                                ? "You have demonstrated professional competency in this exam simulation."
+                                                : "This was a high-difficulty simulation. Review the analysis below."}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="h-32 w-32 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md">
-                                    {isSuccess ? <Award size={64} /> : <AlertTriangle size={64} />}
+                                <div className="h-16 w-16 bg-white/50 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                    {isSuccess ? <Award size={32} /> : <AlertTriangle size={32} />}
                                 </div>
                             </div>
-                            <div className="mt-12 flex gap-4">
-                                <Button onClick={resetQuiz} className="bg-white text-black hover:bg-zinc-200 rounded-2xl h-14 px-10 font-black uppercase tracking-widest border-none">
+                            <div className="mt-6 flex gap-3">
+                                <Button onClick={resetQuiz} className="bg-foreground text-background hover:bg-foreground/90 rounded-lg h-10 px-5 font-bold uppercase text-[10px] tracking-widest shadow-sm">
                                     New Simulation
                                 </Button>
-                                <Button variant="outline" className="text-white border-white/30 hover:bg-white/10 rounded-2xl h-14 px-10 font-black uppercase tracking-widest">
+                                <Button onClick={handleDownloadReview} variant="outline" className="bg-transparent border-current hover:bg-black/5 rounded-lg h-10 px-5 font-bold uppercase text-[10px] tracking-widest">
                                     Download Review
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <div className="space-y-6">
-                        <div className="p-8 bg-card rounded-[2.5rem] shadow-xl border-2 border-border/50 text-center">
-                            <CheckCircle className="h-10 w-10 text-green-500 mx-auto mb-3" />
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Accuracy</p>
-                            <p className="text-4xl font-black">{results.correct_answers}/{results.total_questions}</p>
+                    <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                        <div className="p-4 bg-card rounded-2xl shadow-sm border text-center flex flex-col items-center justify-center">
+                            <CheckCircle className="h-6 w-6 text-green-500 mb-2" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Accuracy</p>
+                            <p className="text-2xl font-black">{results.correct_answers}/{results.total_questions}</p>
                         </div>
-                        <div className="p-8 bg-card rounded-[2.5rem] shadow-xl border-2 border-border/50 text-center">
-                            <Timer className="h-10 w-10 text-blue-500 mx-auto mb-3" />
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Time Taken</p>
-                            <p className="text-4xl font-black">{formatTime(results.time_taken_seconds)}</p>
+                        <div className="p-4 bg-card rounded-2xl shadow-sm border text-center flex flex-col items-center justify-center">
+                            <Timer className="h-6 w-6 text-blue-500 mb-2" />
+                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Time Taken</p>
+                            <p className="text-2xl font-black">{formatTime(results.time_taken_seconds)}</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    <h2 className="text-2xl font-black uppercase tracking-tight px-4 flex items-center gap-3">
-                        <Brain className="text-primary" />
+                <div className="space-y-4">
+                    <h2 className="text-lg font-black uppercase tracking-tight px-2 flex items-center gap-2">
+                        <Brain className="text-primary h-4 w-4" />
                         Detailed Analysis
                     </h2>
                     {results.detailed_results.map((result, idx) => (
-                        <Card key={idx} className="border-none shadow-lg rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-shadow">
-                            <CardContent className="p-8 flex items-start gap-8">
-                                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ${result.is_correct ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                                    {result.is_correct ? <CheckCircle size={28} /> : <XCircle size={28} />}
+                        <Card key={idx} className="border-none shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-shadow bg-card/50">
+                            <CardContent className="p-4 flex items-start gap-4">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${result.is_correct ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                                    {result.is_correct ? <CheckCircle size={16} /> : <XCircle size={16} />}
                                 </div>
-                                <div className="space-y-4">
+                                <div className="space-y-2 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${result.is_correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${result.is_correct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                             {result.is_correct ? 'Verified' : 'Incorrect'}
                                         </span>
-                                        <span className="text-[10px] font-black text-muted-foreground uppercase">Item {idx + 1}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase">Item {idx + 1}</span>
                                     </div>
-                                    <p className="text-lg font-bold leading-tight">{result.explanation}</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                                        <div className={`p-4 rounded-2xl border-2 ${result.is_correct ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+                                    <p className="text-sm font-bold leading-relaxed">{result.explanation}</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                                        <div className={`p-2 rounded-lg border ${result.is_correct ? 'bg-green-50/50 border-green-100' : 'bg-red-50/50 border-red-100'}`}>
                                             <p className="text-[10px] uppercase font-black opacity-40 mb-1">Your Submission</p>
-                                            <p className={`font-black ${result.is_correct ? 'text-green-600' : 'text-red-500'}`}>{result.user_answer}</p>
+                                            <p className={`font-bold text-xs ${result.is_correct ? 'text-green-600' : 'text-red-500'}`}>{result.user_answer}</p>
                                         </div>
                                         {!result.is_correct && (
-                                            <div className="p-4 bg-green-500/5 rounded-2xl border-2 border-green-500/10">
+                                            <div className="p-2 bg-green-50/50 rounded-lg border border-green-100">
                                                 <p className="text-[10px] uppercase font-black opacity-40 mb-1">Official Solution</p>
-                                                <p className="font-black text-green-600">{result.correct_answer}</p>
+                                                <p className="font-bold text-xs text-green-600">{result.correct_answer}</p>
                                             </div>
                                         )}
                                     </div>
@@ -323,7 +352,7 @@ export const TestCenterPage: React.FC = () => {
                                                         }`}>
                                                         {optionLetter}
                                                     </div>
-                                                    <span className={`text-base font-medium leading-normal flex-1 ${isSelected ? 'text-primary-foreground/90' : 'text-foreground/80'}`}>
+                                                    <span className={`text-base font-medium leading-normal flex-1 ${isSelected ? 'text-primary font-bold' : 'text-foreground/80'}`}>
                                                         {optionText}
                                                     </span>
                                                 </div>
