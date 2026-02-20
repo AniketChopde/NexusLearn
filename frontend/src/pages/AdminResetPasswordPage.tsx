@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
-import { Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 
-const resetPasswordSchema = z.object({
+const schema = z.object({
     password: z
         .string()
         .min(8, 'Password must be at least 8 characters')
-        .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-        .regex(/[0-9]/, 'Password must contain at least one number'),
+        .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+        .regex(/[0-9]/, 'Must contain at least one number'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).refine((d) => d.password === d.confirmPassword, {
     message: "Passwords don't match",
-    path: ["confirmPassword"],
+    path: ['confirmPassword'],
 });
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+type FormData = z.infer<typeof schema>;
 
-export const ResetPasswordPage: React.FC = () => {
+export const AdminResetPasswordPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
     const navigate = useNavigate();
@@ -36,34 +36,29 @@ export const ResetPasswordPage: React.FC = () => {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<ResetPasswordFormData>({
-        resolver: zodResolver(resetPasswordSchema),
-    });
+    } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-    const onSubmit = async (data: ResetPasswordFormData) => {
+    const onSubmit = async (data: FormData) => {
         if (!token) {
-            toast.error('Invalid token. Please request a new password reset link.');
+            toast.error('Invalid token. Please request a new admin reset link.');
             return;
         }
-
         setIsLoading(true);
         setApiError(null);
         try {
-            await apiClient.post('/auth/reset-password', {
+            await apiClient.post('/admin/reset-password', {
                 token,
                 new_password: data.password,
             });
             setIsSuccess(true);
-            toast.success('Password reset successfully!');
+            toast.success('Admin password reset successfully!');
             setTimeout(() => navigate('/login'), 2000);
         } catch (error: any) {
             const detail = error?.response?.data?.detail;
-            const status = error?.response?.status;
+            const httpStatus = error?.response?.status;
 
-            if (status === 400) {
-                setApiError(detail || 'This reset link is invalid or expired. Please request a new one.');
-            } else if (status === 422) {
-                setApiError(detail || 'Password does not meet requirements.');
+            if (httpStatus === 400 || httpStatus === 403) {
+                setApiError(detail || 'This reset link is invalid or expired.');
             } else {
                 setApiError(detail || 'Something went wrong. Please try again later.');
             }
@@ -74,7 +69,7 @@ export const ResetPasswordPage: React.FC = () => {
 
     if (!token) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <div className="flex justify-center mb-2">
@@ -84,12 +79,12 @@ export const ResetPasswordPage: React.FC = () => {
                         </div>
                         <CardTitle className="text-xl font-bold text-center text-destructive">Invalid Link</CardTitle>
                         <CardDescription className="text-center">
-                            This password reset link is missing or invalid. Please request a new one.
+                            This admin password reset link is missing or invalid. Please request a new one.
                         </CardDescription>
                     </CardHeader>
                     <CardFooter className="flex justify-center">
-                        <Link to="/forgot-password">
-                            <Button>Request New Link</Button>
+                        <Link to="/admin/forgot-password">
+                            <Button>Request New Admin Reset Link</Button>
                         </Link>
                     </CardFooter>
                 </Card>
@@ -99,7 +94,7 @@ export const ResetPasswordPage: React.FC = () => {
 
     if (isSuccess) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <div className="flex justify-center mb-2">
@@ -107,9 +102,9 @@ export const ResetPasswordPage: React.FC = () => {
                                 <CheckCircle className="h-10 w-10 text-green-600" />
                             </div>
                         </div>
-                        <CardTitle className="text-xl font-bold text-center">Password Updated!</CardTitle>
+                        <CardTitle className="text-xl font-bold text-center">Admin Password Updated!</CardTitle>
                         <CardDescription className="text-center">
-                            Your password has been reset successfully. Redirecting to login...
+                            Password reset successful. Redirecting to login...
                         </CardDescription>
                     </CardHeader>
                 </Card>
@@ -118,15 +113,15 @@ export const ResetPasswordPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
-                    <div className="flex flex-col items-center justify-center gap-2 mb-2">
-                        <img src="/logo.png" alt="StudyItUp" className="h-10 w-10" />
+                    <div className="flex flex-col items-center gap-2 mb-2">
+                        <ShieldAlert className="h-10 w-10 text-purple-600" />
                     </div>
-                    <CardTitle className="text-2xl font-bold text-center">Reset Password</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">Reset Admin Password</CardTitle>
                     <CardDescription className="text-center">
-                        Enter your new password below. Must be 8+ characters with an uppercase letter and a number.
+                        Enter your new admin password. Must be 8+ characters with an uppercase letter and number.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -148,25 +143,24 @@ export const ResetPasswordPage: React.FC = () => {
                             {...register('confirmPassword')}
                         />
 
-                        {/* API Error Banner */}
                         {apiError && (
                             <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                                 <div>
                                     <span>{apiError}</span>
-                                    {apiError.toLowerCase().includes('link') && (
+                                    {apiError.toLowerCase().includes('expired') || apiError.toLowerCase().includes('invalid') ? (
                                         <div className="mt-1">
-                                            <Link to="/forgot-password" className="font-semibold underline">
-                                                Request a new reset link →
+                                            <Link to="/admin/forgot-password" className="font-semibold underline">
+                                                Request a new admin reset link →
                                             </Link>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
                         )}
 
                         <Button type="submit" className="w-full" isLoading={isLoading}>
-                            Reset Password
+                            Reset Admin Password
                         </Button>
                     </form>
                 </CardContent>

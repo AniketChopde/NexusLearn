@@ -26,12 +26,13 @@ class EmailService:
     def __init__(self):
         self.fastmail = FastMail(conf)
 
-    async def send_reset_password_email(self, email: EmailStr, token: str, host_url: str):
+    async def send_reset_password_email(self, email: EmailStr, token: str, host_url: str, reset_url: str | None = None):
         """
         Send a password reset email to the user.
+        If reset_url is provided explicitly it will be used; otherwise it defaults to {host_url}/reset-password?token={token}.
         """
         try:
-            reset_link = f"{host_url}/reset-password?token={token}"
+            reset_link = reset_url if reset_url else f"{host_url}/reset-password?token={token}"
             
             html = f"""
             <html>
@@ -64,6 +65,8 @@ class EmailService:
             logger.error(f"Failed to send email to {email}: {str(e)}")
             # In development, we might not have a valid SMTP server, so we log the link
             if settings.debug:
+                reset_link = reset_url if reset_url else f"{host_url}/reset-password?token={token}"
                 logger.warning(f"DEBUG MODE - Reset Link: {reset_link}")
                 return True # Pretend success in debug
             return False
+

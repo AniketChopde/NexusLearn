@@ -2,24 +2,27 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import apiClient from '../api/client';
-import toast from 'react-hot-toast';
-import { Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 
-const forgotPasswordSchema = z.object({
+const schema = z.object({
     email: z
         .string()
         .min(1, 'Email is required')
-        .email('Please enter a valid email address (e.g. user@example.com)'),
+        .email('Please enter a valid email address'),
 });
 
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+type FormData = z.infer<typeof schema>;
 
-export const ForgotPasswordPage: React.FC = () => {
+// Navigate to admin login (LoginPage detects admin mode via from state)
+const ADMIN_LOGIN_STATE = { state: { from: { pathname: '/admin' } } };
+
+export const AdminForgotPasswordPage: React.FC = () => {
+    const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [apiError, setApiError] = useState<string | null>(null);
@@ -28,28 +31,25 @@ export const ForgotPasswordPage: React.FC = () => {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<ForgotPasswordFormData>({
-        resolver: zodResolver(forgotPasswordSchema),
-    });
+    } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-    const onSubmit = async (data: ForgotPasswordFormData) => {
+    const onSubmit = async (data: FormData) => {
         setIsLoading(true);
         setApiError(null);
         try {
-            await apiClient.post('/auth/forgot-password', data);
+            await apiClient.post('/admin/forgot-password', data);
             setIsSubmitted(true);
         } catch (error: any) {
             const detail = error?.response?.data?.detail;
-            const status = error?.response?.status;
+            const httpStatus = error?.response?.status;
 
-            if (status === 404) {
-                setApiError(detail || 'No account found with this email address. Please check the email and try again.');
-            } else if (status === 403) {
-                setApiError(detail || 'This account has been deactivated. Please contact support.');
+            if (httpStatus === 404) {
+                setApiError(detail || 'No admin account found with this email address.');
+            } else if (httpStatus === 403) {
+                setApiError(detail || 'This email does not belong to an admin account.');
             } else {
                 setApiError(detail || 'Something went wrong. Please try again later.');
             }
-            toast.error('Could not send reset link.');
         } finally {
             setIsLoading(false);
         }
@@ -57,7 +57,7 @@ export const ForgotPasswordPage: React.FC = () => {
 
     if (isSubmitted) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
                 <Card className="w-full max-w-md">
                     <CardHeader className="space-y-1">
                         <div className="flex justify-center mb-2">
@@ -67,13 +67,13 @@ export const ForgotPasswordPage: React.FC = () => {
                         </div>
                         <CardTitle className="text-2xl font-bold text-center">Check your email</CardTitle>
                         <CardDescription className="text-center">
-                            A password reset link has been sent to your email address. It expires in 30 minutes.
+                            An admin password reset link has been sent to your email. It expires in 30 minutes.
                         </CardDescription>
                     </CardHeader>
                     <CardFooter className="flex justify-center">
-                        <Link to="/login">
-                            <Button variant="outline">Back to Login</Button>
-                        </Link>
+                        <Button variant="outline" onClick={() => navigate('/login', ADMIN_LOGIN_STATE)}>
+                            Back to Admin Login
+                        </Button>
                     </CardFooter>
                 </Card>
             </div>
@@ -81,29 +81,28 @@ export const ForgotPasswordPage: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
-                    <div className="flex flex-col items-center justify-center gap-2 mb-2">
-                        <img src="/logo.png" alt="StudyItUp" className="h-10 w-10" />
+                    <div className="flex flex-col items-center gap-2 mb-2">
+                        <ShieldAlert className="h-10 w-10 text-purple-600" />
                     </div>
-                    <CardTitle className="text-2xl font-bold text-center">Forgot Password</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">Admin Password Reset</CardTitle>
                     <CardDescription className="text-center">
-                        Enter your registered email address and we'll send you a password reset link.
+                        Enter your admin email address. Only registered admin accounts can reset their password here.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <Input
-                            label="Email Address"
+                            label="Admin Email Address"
                             type="email"
-                            placeholder="you@example.com"
+                            placeholder="admin@example.com"
                             error={errors.email?.message}
                             icon={<Mail className="h-4 w-4" />}
                             {...register('email')}
                         />
 
-                        {/* API Error Banner */}
                         {apiError && (
                             <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                                 <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
@@ -112,14 +111,17 @@ export const ForgotPasswordPage: React.FC = () => {
                         )}
 
                         <Button type="submit" className="w-full" isLoading={isLoading}>
-                            Send Reset Link
+                            Send Admin Reset Link
                         </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center">
-                    <Link to="/login" className="text-sm text-primary hover:underline">
-                        Back to Login
-                    </Link>
+                    <button
+                        onClick={() => navigate('/login', ADMIN_LOGIN_STATE)}
+                        className="text-sm text-primary hover:underline"
+                    >
+                        Back to Admin Login
+                    </button>
                 </CardFooter>
             </Card>
         </div>

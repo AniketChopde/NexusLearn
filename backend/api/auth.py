@@ -91,22 +91,22 @@ async def login(
         
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No account found with this email address."
             )
         
         # Verify password
         if not verify_password(credentials.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password"
+                detail="Incorrect password. Please try again."
             )
         
         # Check if user is active
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account is inactive"
+                detail="Your account has been deactivated. Please contact support."
             )
         
         # Create tokens
@@ -191,9 +191,10 @@ async def refresh_token(
 
 
 # Password Reset Schemas
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime, timedelta
 import uuid
+import re
 from utils.email import EmailService
 from config import settings
 
@@ -203,6 +204,17 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+    
+    @field_validator('new_password')
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters')
+        if not re.search(r'[A-Z]', v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not re.search(r'[0-9]', v):
+            raise ValueError('Password must contain at least one number')
+        return v
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 async def forgot_password(
@@ -219,10 +231,24 @@ async def forgot_password(
         )
         user = result.scalar_one_or_none()
         
-        # Security: Always return success even if user not found to prevent enumeration
         if not user:
-            logger.info(f"Password reset requested for non-existent email: {request.email}")
-            return {"message": "If this email is registered, you will receive a password reset link."}
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No account found with this email address."
+            )
+
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This account has been deactivated. Please contact support."
+            )
+
+        # Block admin accounts from using the public password reset flow
+        if user.is_superuser:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin accounts cannot use the public password reset. Please contact your system administrator."
+            )
             
         # Generate token
         token = str(uuid.uuid4())
@@ -233,18 +259,20 @@ async def forgot_password(
         
         # Send email
         email_service = EmailService()
-        # Use configured frontend URL
         host = settings.frontend_url
         
         await email_service.send_reset_password_email(user.email, token, host)
         
-        return {"message": "If this email is registered, you will receive a password reset link."}
+        logger.info(f"Password reset email sent to: {user.email}")
+        return {"message": "Password reset link sent to your email."}
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in forgot_password: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process request"
+            detail="Failed to send reset email. Please try again later."
         )
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
@@ -265,14 +293,18 @@ async def reset_password(
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired token"
+                detail="This reset link is invalid. Please request a new one."
             )
             
         # Check expiry
         if user.reset_token_expires < datetime.utcnow():
+            # Invalidate the expired token
+            user.reset_token = None
+            user.reset_token_expires = None
+            await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Token has expired"
+                detail="This reset link has expired (valid for 30 minutes). Please request a new one."
             )
             
         # Update password
@@ -283,13 +315,18 @@ async def reset_password(
         await db.commit()
         
         logger.info(f"Password reset successful for user: {user.email}")
-        return {"message": "Password reset successful"}
+        return {"message": "Password reset successful. You can now log in with your new password."}
         
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
     except Exception as e:
         logger.error(f"Error in reset_password: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reset password"
+            detail="Failed to reset password. Please try again."
         )

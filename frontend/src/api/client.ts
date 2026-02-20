@@ -67,6 +67,19 @@ apiClient.interceptors.response.use(
 
         console.debug(`[API Error] Status: ${status} | URL: ${url}`, error.response?.data);
 
+        // Auth endpoints handle their own errors in the store — skip interceptor handling
+        const isAuthEndpoint = url?.includes('/auth/login') ||
+            url?.includes('/auth/register') ||
+            url?.includes('/admin/forgot-password') ||
+            url?.includes('/admin/reset-password') ||
+            url?.includes('/auth/forgot-password') ||
+            url?.includes('/auth/reset-password');
+
+        if (isAuthEndpoint) {
+            // Let the calling code (store/page) handle the error and show its own message
+            return Promise.reject(error);
+        }
+
         // If this 401 is FROM the refresh call itself, do not try to refresh again (prevents loop)
         if (status === 401 && isRefreshRequest(originalRequest)) {
             console.error('[API] Refresh token expired or invalid. Redirecting to login.');

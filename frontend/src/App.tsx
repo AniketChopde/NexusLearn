@@ -16,6 +16,8 @@ import { StudyPlanDetailPage } from './pages/StudyPlanDetailPage';
 import { Loading } from './components/ui/Loading';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AdminForgotPasswordPage } from './pages/AdminForgotPasswordPage';
+import { AdminResetPasswordPage } from './pages/AdminResetPasswordPage';
 import AdminPage from './pages/AdminPage';
 
 // Protected Route Component
@@ -138,6 +140,14 @@ function App() {
               <ResetPasswordPage />
             </PublicRoute>
           }
+        />
+        <Route
+          path="/admin/forgot-password"
+          element={<AdminForgotPasswordPage />}
+        />
+        <Route
+          path="/admin/reset-password"
+          element={<AdminResetPasswordPage />}
         />
 
         {/* Protected Routes */}

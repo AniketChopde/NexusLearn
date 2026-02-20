@@ -56,7 +56,25 @@ export const useAuthStore = create<AuthState>()(
                     toast.success('Login successful!');
                 } catch (error: any) {
                     set({ isLoading: false });
-                    toast.error(error.response?.data?.detail || 'Login failed');
+                    const httpStatus = error?.response?.status;
+                    const detail = error?.response?.data?.detail;
+
+                    let message = 'Login failed. Please try again.';
+                    if (httpStatus === 401) {
+                        message = detail || 'Incorrect email or password.';
+                    } else if (httpStatus === 403) {
+                        message = detail || 'Your account has been deactivated. Please contact support.';
+                    } else if (httpStatus === 404) {
+                        message = 'No account found with this email address.';
+                    } else if (httpStatus === 422) {
+                        message = 'Invalid email or password format.';
+                    } else if (!error?.response) {
+                        message = 'Cannot reach the server. Please check your connection.';
+                    } else if (detail) {
+                        message = detail;
+                    }
+
+                    toast.error(message);
                     throw error;
                 }
             },
