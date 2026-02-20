@@ -32,7 +32,11 @@ const AdminPage: React.FC = () => {
         try {
             if (activeTab === 'users') {
                 const data = await fetchUsers();
-                setUsers(data.filter(u => !u.is_superuser));
+                setUsers(
+                    data
+                        .filter(u => !u.is_superuser)
+                        .map(u => ({ ...u, full_name: u.full_name ?? undefined }))
+                );
             } else {
                 const data = await fetchEngagements();
                 setEngagements(data);
