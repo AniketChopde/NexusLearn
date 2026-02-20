@@ -43,6 +43,7 @@ function clearAuthAndRedirect() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('auth-storage'); // Critical: Clear Zustand persist store
     sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('refresh_token');
     window.location.href = '/login';
@@ -137,6 +138,12 @@ apiClient.interceptors.response.use(
 
         // Filter out 401s from toasting (handled above or ignored during refresh flow)
         // Also handling 403 explicitly if that's what user sees as "Not authenticated"
+        if (status === 403 && (errorMessage === 'Not authenticated' || errorMessage === 'Could not validate credentials')) {
+            console.warn('[API] 403 Not Authenticated. Redirecting.');
+            clearAuthAndRedirect();
+            return Promise.reject(error);
+        }
+
         if (status !== 401) {
             // For 404s on API endpoints, it might mean Nginx misconfig or wrong URL.
             // We should still toast but maybe clarify?

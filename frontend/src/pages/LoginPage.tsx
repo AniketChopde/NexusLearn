@@ -1,10 +1,11 @@
 import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../stores/authStore';
 import { Button } from '../components/ui/Button';
+import { ShieldAlert } from 'lucide-react';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 
@@ -18,6 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, isLoading } = useAuthStore();
 
     const rememberedEmail = localStorage.getItem('remembered_email');
@@ -46,23 +48,39 @@ export const LoginPage: React.FC = () => {
                 localStorage.removeItem('remembered_password');
             }
             await login(data);
-            navigate('/dashboard');
+            
+            // Redirect to stored location or dashboard
+            const from = location.state?.from?.pathname || '/dashboard';
+            navigate(from, { replace: true });
         } catch (error) {
             // Error handled by store
         }
     };
+
+    const from = location.state?.from?.pathname || '/dashboard';
+    const isAdminLogin = from.includes('/admin');
+
+    // ... (onSubmit remains same)
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <div className="flex flex-col items-center justify-center gap-2 mb-2">
-                        <img src="/logo.png" alt="StudyItUp" className="h-12 w-12" />
+                        {isAdminLogin ? (
+                             <ShieldAlert className="h-12 w-12 text-purple-600" />
+                        ) : (
+                            <img src="/logo.png" alt="StudyItUp" className="h-12 w-12" />
+                        )}
                         <span className="text-2xl font-bold text-primary">StudyItUp</span>
                     </div>
-                    <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+                    <CardTitle className="text-3xl font-bold text-center">
+                        {isAdminLogin ? 'Admin Login' : 'Welcome Back'}
+                    </CardTitle>
                     <CardDescription className="text-center">
-                        Sign in to your StudyItUp account
+                        {isAdminLogin 
+                            ? 'Secure access for administrators only' 
+                            : 'Sign in to your StudyItUp account'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -106,12 +124,14 @@ export const LoginPage: React.FC = () => {
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-2">
-                    <p className="text-sm text-center text-muted-foreground">
-                        Don't have an account?{' '}
-                        <Link to="/register" className="text-primary hover:underline">
-                            Sign up
-                        </Link>
-                    </p>
+                    {!isAdminLogin && (
+                        <p className="text-sm text-center text-muted-foreground">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="text-primary hover:underline">
+                                Sign up
+                            </Link>
+                        </p>
+                    )}
                 </CardFooter>
             </Card>
         </div>

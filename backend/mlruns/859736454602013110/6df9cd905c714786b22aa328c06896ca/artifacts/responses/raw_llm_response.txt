@@ -1,0 +1,80 @@
+```json
+{
+  "exam": "SAT",
+  "is_fast_learn": true,
+  "modules": [
+    {
+      "module_name": "SAT Math Foundations (Heart of Algebra)",
+      "estimated_days": 2,
+      "difficulty": "Easy",
+      "topics": [
+        "Linear equations and inequalities",
+        "Systems of linear equations",
+        "Linear functions and graphs",
+        "Word problems with linear models"
+      ],
+      "pedagogical_reasoning": "Heart of Algebra carries the highest weight in SAT Math and forms the foundation for almost all other math questions. Mastery here enables quick score gains and supports later problem-solving topics."
+    },
+    {
+      "module_name": "SAT Math Advanced Problem Solving",
+      "estimated_days": 2,
+      "difficulty": "Medium",
+      "topics": [
+        "Problem Solving and Data Analysis",
+        "Ratios, proportions, and percentages",
+        "Interpreting tables and graphs",
+        "Basic statistics (mean, median, probability)"
+      ],
+      "pedagogical_reasoning": "These topics appear frequently and are best tackled after algebra basics. They rely on arithmetic reasoning and data interpretation, offering high return with practice-focused learning."
+    },
+    {
+      "module_name": "SAT Math Passport to Advanced Math",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Quadratic equations",
+        "Polynomial expressions",
+        "Exponential functions",
+        "Function notation and interpretation"
+      ],
+      "pedagogical_reasoning": "These questions are fewer than algebra but still high-value. They require prior mastery of linear concepts, making this module logically sequenced after algebra and data analysis."
+    },
+    {
+      "module_name": "SAT Reading: Core Comprehension Skills",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Main idea and passage purpose",
+        "Evidence-based questions",
+        "Vocabulary in context",
+        "Inference questions"
+      ],
+      "pedagogical_reasoning": "These skills dominate the Reading section. Focusing on comprehension and evidence pairing yields maximum accuracy across all passage types without spending time on low-yield strategies."
+    },
+    {
+      "module_name": "SAT Reading: High-Frequency Passage Types",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Science passages",
+        "Social science passages",
+        "Paired passages strategy",
+        "Data interpretation in passages"
+      ],
+      "pedagogical_reasoning": "Science and social science passages appear most often and follow predictable patterns. Training specifically on these improves speed and confidence under time pressure."
+    },
+    {
+      "module_name": "SAT Writing and Language Essentials",
+      "estimated_days": 1,
+      "difficulty": "Easy",
+      "topics": [
+        "Grammar and sentence structure",
+        "Punctuation (commas, colons, semicolons)",
+        "Verb tense and subject-verb agreement",
+        "Conciseness and redundancy"
+      ],
+      "pedagogical_reasoning": "Writing and Language is rule-based and highly scorable in limited time. Focusing on the most tested grammar rules maximizes points with minimal content load."
+    }
+  ]
+}
+```

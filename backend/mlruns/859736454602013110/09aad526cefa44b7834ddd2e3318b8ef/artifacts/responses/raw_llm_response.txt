@@ -1,0 +1,97 @@
+```json
+{
+  "exam": "Javascript",
+  "is_fast_learn": true,
+  "modules": [
+    {
+      "module_name": "JavaScript Fundamentals & Execution Basics",
+      "estimated_days": 1,
+      "difficulty": "Easy",
+      "topics": [
+        "JavaScript role in web development",
+        "Variables (var, let, const)",
+        "Data types (primitive vs reference)",
+        "Type coercion and typeof",
+        "Operators and expressions",
+        "Execution context and basic hoisting"
+      ],
+      "pedagogical_reasoning": "These are core building blocks with very high exam weightage. Understanding variables, types, and execution basics is essential before moving to logic, functions, and advanced concepts."
+    },
+    {
+      "module_name": "Control Flow & Core Logic",
+      "estimated_days": 1,
+      "difficulty": "Easy",
+      "topics": [
+        "Conditional statements (if, switch)",
+        "Loops (for, while, do-while)",
+        "Break and continue",
+        "Basic problem-solving patterns"
+      ],
+      "pedagogical_reasoning": "Control flow forms the foundation for all logical programming questions and is heavily tested in exams. It builds directly on fundamentals."
+    },
+    {
+      "module_name": "Functions & Scope",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Function declarations and expressions",
+        "Arrow functions",
+        "Parameters and return values",
+        "Scope (global, function, block)",
+        "Closures (exam-oriented understanding)"
+      ],
+      "pedagogical_reasoning": "Functions and scope are high-weight topics and frequently tested conceptually. Closures are included due to their common appearance in exam questions."
+    },
+    {
+      "module_name": "Arrays & Objects (Core Data Structures)",
+      "estimated_days": 1.5,
+      "difficulty": "Medium",
+      "topics": [
+        "Array creation and traversal",
+        "Important array methods (map, filter, reduce, forEach)",
+        "Object creation and access",
+        "Object methods and this keyword",
+        "Shallow vs deep copy (basic)"
+      ],
+      "pedagogical_reasoning": "Arrays and objects are central to JavaScript programming and carry very high exam weightage, especially method-based and output-prediction questions."
+    },
+    {
+      "module_name": "Advanced Execution Concepts",
+      "estimated_days": 1.5,
+      "difficulty": "Hard",
+      "topics": [
+        "Hoisting in depth",
+        "this keyword behavior",
+        "Call, apply, bind",
+        "Event loop overview",
+        "Synchronous vs asynchronous execution"
+      ],
+      "pedagogical_reasoning": "These topics are commonly tested in tricky conceptual and output-based questions. They require prior understanding of functions and execution flow."
+    },
+    {
+      "module_name": "Asynchronous JavaScript",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Callbacks",
+        "Promises",
+        "Async and await",
+        "Error handling with try-catch"
+      ],
+      "pedagogical_reasoning": "Asynchronous JavaScript is a high-weight modern topic. Exams frequently test promises, async/await syntax, and execution order."
+    },
+    {
+      "module_name": "DOM & Browser Interaction",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "DOM structure and selection",
+        "DOM manipulation",
+        "Events and event handling",
+        "Basic form handling"
+      ],
+      "pedagogical_reasoning": "DOM-related questions are common in JavaScript exams focused on practical understanding. This module leverages prior knowledge of functions and events."
+    }
+  ]
+}
+```

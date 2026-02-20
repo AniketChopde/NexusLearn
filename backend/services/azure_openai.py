@@ -39,8 +39,9 @@ class AzureOpenAIService:
         messages: List[Dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 2000,
-        response_format: Optional[Dict[str, str]] = None
-    ) -> str:
+        response_format: Optional[Dict[str, str]] = None,
+        return_full_response: bool = False
+    ) -> Any:
         """
         Generate chat completion.
         """
@@ -110,6 +111,9 @@ class AzureOpenAIService:
             if hasattr(response, 'usage'):
                 logger.debug(f"LLM Usage: {response.usage.total_tokens} tokens")
             
+            if return_full_response:
+                return response
+                
             return content
         
         except Exception as e:

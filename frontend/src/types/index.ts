@@ -5,6 +5,7 @@ export interface User {
     full_name?: string;
     is_active: boolean;
     is_verified: boolean;
+    is_superuser: boolean;
     created_at: string;
 }
 
@@ -305,4 +306,19 @@ export interface ApiError {
     detail?: any;
     status_code: number;
     timestamp: string;
+}
+// Engagement Types
+export interface Engagement {
+    id: string;
+    user_id: string;
+    user?: {
+        email: string;
+        full_name?: string | null;
+    };
+    content_type: string;
+    content_id: string;
+    action: string;
+    value: number;
+    comment?: string | null;
+    created_at: string;
 }

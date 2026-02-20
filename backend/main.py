@@ -91,7 +91,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle general exceptions."""
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error("Unhandled exception: " + str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
@@ -139,6 +139,9 @@ app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(search.router, prefix="/api/search", tags=["Search"])
 app.include_router(mindmap.router, prefix="/api/mindmap", tags=["Mindmap"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+from api import admin, engagement
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+app.include_router(engagement.router, prefix="/api/engagement", tags=["Engagement"])
 
 
 if __name__ == "__main__":
