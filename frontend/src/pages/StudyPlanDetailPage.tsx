@@ -230,8 +230,8 @@ export const StudyPlanDetailPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
-                <div className="lg:col-span-8">
+                {/* Main Content Area - scrollable so long lesson content doesn't push the page */}
+                <div className="lg:col-span-8 max-h-[calc(100vh-11rem)] overflow-y-auto overscroll-behavior-contain custom-scrollbar">
                     {viewMode === 'syllabus' ? (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
                             <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-card">
