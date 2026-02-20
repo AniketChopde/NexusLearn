@@ -10,6 +10,7 @@ import {
     Menu,
     X,
     ShieldCheck,
+    ShieldAlert,
     Brain,
     BarChart,
 } from 'lucide-react';
@@ -21,6 +22,10 @@ const navigation = [
     { name: 'Take Quiz', href: '/quiz', icon: Brain },
     { name: 'View Analytics', href: '/analytics', icon: BarChart },
     { name: 'Test Center', href: '/test-center', icon: ShieldCheck },
+];
+
+const adminNavigation = [
+    { name: 'Admin Panel', href: '/admin', icon: ShieldAlert },
 ];
 
 interface LayoutProps {
@@ -65,6 +70,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                                     <span>{item.name}</span>
                                 </Link>
                             ))}
+
+                            {user?.is_superuser && (
+                                <>
+                                    <div className="border-t my-2 border-border/50" />
+                                    {adminNavigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            to={item.href}
+                                            className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors text-purple-600 dark:text-purple-400 font-medium"
+                                            onClick={() => setSidebarOpen(false)}
+                                        >
+                                            <item.icon className="h-5 w-5" />
+                                            <span>{item.name}</span>
+                                        </Link>
+                                    ))}
+                                </>
+                            )}
                         </nav>
                         <div className="p-4 border-t">
                             <Button
@@ -100,6 +122,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                                 <span>{item.name}</span>
                             </Link>
                         ))}
+
+                        {/* Admin Links */}
+                        {user?.is_superuser && (
+                            <>
+                                <div className="border-t my-2 border-border/50" />
+                                {adminNavigation.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        to={item.href}
+                                        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors text-purple-600 dark:text-purple-400 font-medium"
+                                    >
+                                        <item.icon className="h-5 w-5" />
+                                        <span>{item.name}</span>
+                                    </Link>
+                                ))}
+                            </>
+                        )}
                     </nav>
                     <div className="p-4 border-t">
                         <Button

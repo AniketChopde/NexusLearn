@@ -1,0 +1,14 @@
+artifact_uri: file:///E:/genaikitfeb_2026/NexusLearn/backend/mlruns/859736454602013110/f12aa9dcc82f465b9893924b31be0723/artifacts
+end_time: 1771568745441
+entry_point_name: ''
+experiment_id: '859736454602013110'
+lifecycle_stage: active
+run_id: f12aa9dcc82f465b9893924b31be0723
+run_name: goal_analysis_analyze_user_goal
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1771568737064
+status: 3
+tags: []
+user_id: males

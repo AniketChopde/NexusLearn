@@ -11,6 +11,7 @@ import {
     Target, Award, AlertTriangle, Lightbulb, History
 } from 'lucide-react';
 import { formatTime } from '../lib/utils';
+import { EngagementButtons } from '../components/EngagementButtons';
 
 export const QuizPage: React.FC = () => {
     const navigate = useNavigate();
@@ -51,21 +52,14 @@ export const QuizPage: React.FC = () => {
 
     // Reset quiz on mount if we're not waiting for results or mid-quiz
     // This fixes the issue where old results persist when coming back to "Take Quiz"
+    // Reset quiz on mount if we're not waiting for results or mid-quiz, or if autoStart is requested (to clear stale state)
     React.useEffect(() => {
-        // Only reset if we don't have URL params that imply continuation or specific start
-        // And if we are not already in a fresh state
-        if (!urlChapterId && !urlTopic && (activeQuiz || results)) {
+        // If autoStart is true, we force a reset to ensure we start fresh.
+        // Or if we are in general mode (no structure params) and have stale data.
+        if (autoStart || (!urlChapterId && !urlTopic && (activeQuiz || results))) {
             resetQuiz();
         }
     }, [location.pathname, location.key]); // Run on mount/navigation
-
-    // When coming from Study Plan "Knowledge Check" with chapterId, only clear *completed* quiz (results) so we can start a new one.
-    React.useEffect(() => {
-        if (urlChapterId && results) {
-            resetQuiz();
-            hasStartedRef.current = false;
-        }
-    }, [urlChapterId, results, resetQuiz]);
 
     React.useEffect(() => {
         if (urlTopic && urlTopic !== topic) setTopic(urlTopic);
@@ -228,6 +222,12 @@ export const QuizPage: React.FC = () => {
                     </Button> */}
                     <span className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-60">Performance Report</span>
                     <h1 className="text-4xl font-black">{results.topic}</h1>
+                    <div className="flex justify-center mt-4">
+                        <EngagementButtons 
+                            contentType="quiz" 
+                            contentId={results.id || 'unknown'} 
+                        />
+                    </div>
                 </div>
 
                 <Card className={`mb-8 border-none shadow-2xl rounded-[3rem] overflow-hidden ${isSuccess ? 'bg-green-500/5' : 'bg-orange-500/5'}`}>

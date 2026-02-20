@@ -18,6 +18,9 @@ import { Mermaid } from '../components/ui/Mermaid';
 import { TopicMindmap } from '../components/TopicMindmap';
 import { ResourcesTab } from '../components/ResourcesTab';
 import { downloadStudyPlanPdf } from '../lib/studyPlanPdf';
+import { EngagementButtons } from '../components/EngagementButtons';
+import { FeedbackModal } from '../components/FeedbackModal';
+import { Star } from 'lucide-react';
 
 export const StudyPlanDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -26,6 +29,7 @@ export const StudyPlanDetailPage: React.FC = () => {
     const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'overview' | 'lesson' | 'syllabus' | 'courses' | 'resources'>('overview');
     const [expandedMindmaps, setExpandedMindmaps] = useState<Record<string, boolean>>({});
+    const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -122,6 +126,15 @@ export const StudyPlanDetailPage: React.FC = () => {
                         >
                             <Download size={16} />
                             Download Plan
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-primary/20 hover:bg-primary/5 h-10 px-6 font-bold flex items-center gap-2"
+                            onClick={() => setIsFeedbackModalOpen(true)}
+                        >
+                            <Star size={16} className="text-yellow-500" />
+                            Rate Plan
                         </Button>
                         <div className="w-full md:w-64 space-y-2">
                             <div className="flex justify-between mb-1">
@@ -371,6 +384,12 @@ export const StudyPlanDetailPage: React.FC = () => {
                                                 <p className="text-primary font-bold uppercase text-xs tracking-widest mt-1">
                                                     Focus: {selectedChapter.subject}
                                                 </p>
+                                                <div className="mt-4">
+                                                    <EngagementButtons 
+                                                        contentType="chapter" 
+                                                        contentId={selectedChapter.id.toString()} 
+                                                    />
+                                                </div>
                                             </div>
                                             <Button
                                                 onClick={handleStartLesson}
@@ -757,6 +776,16 @@ export const StudyPlanDetailPage: React.FC = () => {
                     )}
                 </div>
             </div>
+            
+            {activePlan && (
+                <FeedbackModal
+                    isOpen={isFeedbackModalOpen}
+                    onClose={() => setIsFeedbackModalOpen(false)}
+                    contentType="plan"
+                    contentId={activePlan.id.toString()}
+                    title={`Rate ${activePlan.exam_type} Plan`}
+                />
+            )}
         </div>
     );
 };

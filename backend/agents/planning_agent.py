@@ -6,10 +6,11 @@ from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from loguru import logger
 import json
+import mlflow
 
 from services.azure_openai import azure_openai_service
 from utils.helpers import parse_json_markdown
-
+from utils.mlflow_utils import mlflow_service
 
 class PlanningAgent:
     """Agent responsible for creating and managing study plans."""
@@ -19,6 +20,7 @@ class PlanningAgent:
         self.agent_name = "Planning Agent"
         self.temperature = 0.7
     
+    @mlflow_service.track_latency("goal_analysis")
     async def analyze_user_goal(
         self,
         goal: str,
@@ -117,105 +119,116 @@ class PlanningAgent:
         fast_learn: bool = False
     ) -> Dict[str, Any]:
         """
-        Create a comprehensive study plan.
+        Create a comprehensive study plan with full MLflow tracking.
         """
-        try:
-            # Ensure target_date is a datetime/date object
-            if target_date is None:
-                target_date_obj = (datetime.now() + timedelta(days=90)).date()
-            elif isinstance(target_date, str):
-                try:
-                    clean_date = target_date.replace('Z', '+00:00')
-                    target_date_obj = datetime.fromisoformat(clean_date).date()
-                except ValueError:
+        with mlflow_service.track_run(run_name=f"study_plan_generation_{exam_type}") as run:
+            try:
+                # Log Input Parameters
+                mlflow.log_params({
+                    "exam_type": exam_type,
+                    "target_date_raw": str(target_date),
+                    "daily_hours": daily_hours,
+                    "fast_learn": fast_learn,
+                    "has_syllabus": bool(syllabus_data),
+                    "model": azure_openai_service.deployment
+                })
+
+                # Ensure target_date is a datetime/date object
+                if target_date is None:
                     target_date_obj = (datetime.now() + timedelta(days=90)).date()
-            elif isinstance(target_date, datetime):
-                target_date_obj = target_date.date()
-            else:
-                target_date_obj = target_date
-                
-            days_until_exam = (target_date_obj - datetime.now().date()).days
-            days_until_exam = max(1, days_until_exam)
-            
-            fast_learn_instruction = ""
-            if fast_learn:
-                fast_learn_instruction = """
-                FAST LEARN MODE (CRITICAL):
-                - Prioritize ONLY core and foundational topics.
-                - Skip optional or advanced topics that can be learned later.
-                - Focus on covering essentials in minimum time while keeping a logical learning path.
-                - Ensure even with fewer topics, the pedagogical sequence remains logical.
-                """
-            
-            system_prompt = f"""ROLE: Expert Pedagogical Planner Agent
-            
-            INPUT:
-            - Learning goal / topic (can be an exam name or any subject): {exam_type}
-            - User level & Goal: {goal or "Master the topic"}
-            - Available time: {days_until_exam} days
-            - Mode: {'Fast Learn (Core-first)' if fast_learn else 'Standard'}
-            
-            TASK:
-            Generate a module-wise learning path for {exam_type}. The goal may be an exam (e.g. GATE, UPSC), a skill (e.g. Machine Learning, LangChain), or any subject—structure the plan accordingly.
-            {fast_learn_instruction}
-            
-            CRITICAL SEQUENCING RULES:
-            1. PEDAGOGICAL FLOW: You MUST order modules in a logical pedagogical sequence.
-            2. Master building blocks before tackling complex topics.
-            
-            CONSTRAINTS:
-            - If syllabus/curriculum data is provided, use it. IF NOT, use your internal expertise to determine a standard learning path for {exam_type} (whether exam syllabus, course outline, or skill roadmap).
-            - Do NOT add extra unrelated topics.
-            - Do NOT use internet.
-            
-            OUTPUT:
-            Structured JSON:
-            {{
-              "exam": "{exam_type}",
-              "is_fast_learn": {str(fast_learn).lower()},
-              "modules": [
+                elif isinstance(target_date, str):
+                    try:
+                        clean_date = target_date.replace('Z', '+00:00')
+                        target_date_obj = datetime.fromisoformat(clean_date).date()
+                    except ValueError:
+                        target_date_obj = (datetime.now() + timedelta(days=90)).date()
+                elif isinstance(target_date, datetime):
+                    target_date_obj = target_date.date()
+                else:
+                    target_date_obj = target_date
+                    
+                days_until_exam = (target_date_obj - datetime.now().date()).days
+                days_until_exam = max(1, days_until_exam)
+
+                fast_learn_instruction = ""
+                if fast_learn:
+                    fast_learn_instruction = """
+                    FAST LEARN MODE (CRITICAL):
+                    - Prioritize ONLY core and foundational topics.
+                    - Skip optional or advanced topics that can be learned later.
+                    - Focus on covering essentials in minimum time while keeping a logical learning path.
+                    - Ensure even with fewer topics, the pedagogical sequence remains logical.
+                    """
+
+                system_prompt = f"""ROLE: Expert Pedagogical Planner Agent
+
+                INPUT:
+                - Learning goal / topic (can be an exam name or any subject): {exam_type}
+                - User level & Goal: {goal or "Master the topic"}
+                - Available time: {days_until_exam} days
+                - Mode: {'Fast Learn (Core-first)' if fast_learn else 'Standard'}
+
+                TASK:
+                Generate a module-wise learning path for {exam_type}. The goal may be an exam (e.g. GATE, UPSC), a skill (e.g. Machine Learning, LangChain), or any subject—structure the plan accordingly.
+                {fast_learn_instruction}
+
+                CRITICAL SEQUENCING RULES:
+                1. PEDAGOGICAL FLOW: You MUST order modules in a logical pedagogical sequence.
+                2. Master building blocks before tackling complex topics.
+
+                CONSTRAINTS:
+                - If syllabus/curriculum data is provided, use it. IF NOT, use your internal expertise to determine a standard learning path for {exam_type} (whether exam syllabus, course outline, or skill roadmap).
+                - Do NOT add extra unrelated topics.
+                - Do NOT use internet.
+
+                OUTPUT:
+                Structured JSON:
                 {{
-                  "module_name": "Logical Step Name",
-                  "estimated_days": "days",
-                  "difficulty": "Easy/Medium/Hard",
-                  "topics": ["topic1", "topic2"],
-                  "pedagogical_reasoning": "Reasoning for sequence and weightage"
+                  "exam": "{exam_type}",
+                  "is_fast_learn": {str(fast_learn).lower()},
+                  "modules": [
+                    {{
+                      "module_name": "Logical Step Name",
+                      "estimated_days": "days",
+                      "difficulty": "Easy/Medium/Hard",
+                      "topics": ["topic1", "topic2"],
+                      "pedagogical_reasoning": "Reasoning for sequence and weightage"
+                    }}
+                  ]
                 }}
-              ]
-            }}
-            
-            OUTPUT INSTRUCTIONS:
-            - Output ONLY raw JSON.
-            - Do NOT include any conversational text.
-            """
-            
-            user_prompt = f"""
-            Learning goal / topic: {exam_type}
-            User Goal: {goal or f"Learn {exam_type}"}
-            Days until target date: {days_until_exam}
-            Daily Study Hours: {daily_hours}
-            Syllabus/curriculum (if any): {json.dumps(syllabus_data, indent=2) if syllabus_data else "Determine standard learning path or syllabus based on your knowledge"}
-            Current Knowledge: {json.dumps(current_knowledge or {}, indent=2)}
-            
-            Generate the structured module-wise study plan.
-            """
-            
-            response = await azure_openai_service.chat_completion(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=2000,
-                temperature=0.3
-            )
-            
-            study_plan = parse_json_markdown(response)
-            logger.info(f"Study plan created for {exam_type}")
-            return study_plan
-        
-        except Exception as e:
-            logger.error(f"Error in create_study_plan: {str(e)}")
-            raise
+                
+                OUTPUT INSTRUCTIONS:
+                - Output ONLY raw JSON.
+                - Do NOT include any conversational text.
+                """
+
+                user_prompt = f"""
+                Learning goal / topic: {exam_type}
+                User Goal: {goal or f"Learn {exam_type}"}
+                Days until target date: {days_until_exam}
+                Daily Study Hours: {daily_hours}
+                Syllabus/curriculum (if any): {json.dumps(syllabus_data, indent=2) if syllabus_data else "Determine standard learning path or syllabus based on your knowledge"}
+                Current Knowledge: {json.dumps(current_knowledge or {}, indent=2)}
+
+                Generate the structured module-wise study plan.
+                """
+
+                response = await azure_openai_service.chat_completion(
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_tokens=2000,
+                    temperature=0.3
+                )
+
+                study_plan = parse_json_markdown(response)
+                logger.info(f"Study plan created for {exam_type}")
+                return study_plan
+
+            except Exception as e:
+                logger.error(f"Error in create_study_plan: {str(e)}")
+                raise
     
     async def breakdown_chapters(
         self,

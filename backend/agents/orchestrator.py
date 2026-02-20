@@ -15,7 +15,7 @@ from agents.gap_analysis_agent import gap_analysis_agent
 from agents.content_filter_agent import content_filter_agent
 from services.vector_store import vector_store_service
 from agents.safety_agent import safety_agent
-
+from utils.mlflow_utils import mlflow_service
 
 class AgentOrchestrator:
     """Agent responsible for multi-agent coordination."""
@@ -24,6 +24,7 @@ class AgentOrchestrator:
         """Initialize Orchestrator."""
         self.agent_name = "Orchestrator Agent"
     
+    @mlflow_service.track_latency("exam_prep_workflow")
     async def handle_exam_preparation(
         self,
         exam_type: str,

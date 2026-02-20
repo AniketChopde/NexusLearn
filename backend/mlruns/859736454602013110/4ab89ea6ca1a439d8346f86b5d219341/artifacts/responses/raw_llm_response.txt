@@ -1,0 +1,100 @@
+```json
+{
+  "exam": "SQL Developer",
+  "is_fast_learn": true,
+  "modules": [
+    {
+      "module_name": "SQL Fundamentals & Data Retrieval",
+      "estimated_days": 1,
+      "difficulty": "Easy",
+      "topics": [
+        "SELECT statement syntax",
+        "WHERE clause filtering",
+        "ORDER BY",
+        "DISTINCT",
+        "LIMIT / FETCH",
+        "Basic operators and conditions"
+      ],
+      "pedagogical_reasoning": "Core foundation with very high exam weightage. All advanced SQL concepts depend on accurate data retrieval using SELECT and filtering."
+    },
+    {
+      "module_name": "Single-Row Functions & Expressions",
+      "estimated_days": 1,
+      "difficulty": "Easy",
+      "topics": [
+        "String functions",
+        "Numeric functions",
+        "Date functions",
+        "Conversion functions",
+        "CASE expressions",
+        "NULL handling (NVL, COALESCE)"
+      ],
+      "pedagogical_reasoning": "Frequently tested and builds directly on SELECT queries. Essential for data transformation and conditional logic in queries."
+    },
+    {
+      "module_name": "Joins & Multi-Table Queries",
+      "estimated_days": 1.5,
+      "difficulty": "Medium",
+      "topics": [
+        "INNER JOIN",
+        "LEFT and RIGHT OUTER JOIN",
+        "FULL OUTER JOIN",
+        "Self joins",
+        "Join conditions and aliases"
+      ],
+      "pedagogical_reasoning": "High-weightage area in exams. Requires prior understanding of SELECT and functions. Critical for real-world and exam-based SQL scenarios."
+    },
+    {
+      "module_name": "Grouping, Aggregation & HAVING",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "GROUP BY",
+        "Aggregate functions (SUM, COUNT, AVG, MIN, MAX)",
+        "HAVING clause",
+        "Grouping with joins"
+      ],
+      "pedagogical_reasoning": "Commonly tested with joins and functions. Logical next step after joins to summarize and analyze data."
+    },
+    {
+      "module_name": "Subqueries & Set Operations",
+      "estimated_days": 1,
+      "difficulty": "Medium",
+      "topics": [
+        "Single-row subqueries",
+        "Multi-row subqueries",
+        "Correlated subqueries",
+        "IN, EXISTS, ANY, ALL",
+        "UNION, UNION ALL, INTERSECT, MINUS"
+      ],
+      "pedagogical_reasoning": "High exam relevance and complexity. Builds on SELECT, joins, and grouping concepts to solve nested query problems."
+    },
+    {
+      "module_name": "Data Definition & Data Manipulation Language",
+      "estimated_days": 0.75,
+      "difficulty": "Medium",
+      "topics": [
+        "CREATE, ALTER, DROP",
+        "INSERT, UPDATE, DELETE",
+        "TRUNCATE",
+        "Constraints (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL)"
+      ],
+      "pedagogical_reasoning": "Frequently asked conceptual and practical questions. Essential for understanding database structure and data integrity."
+    },
+    {
+      "module_name": "Transactions, Indexes, Views & PL/SQL Basics",
+      "estimated_days": 0.75,
+      "difficulty": "Hard",
+      "topics": [
+        "COMMIT and ROLLBACK",
+        "ACID properties",
+        "Indexes and performance basics",
+        "Views",
+        "PL/SQL block structure",
+        "Variables and control statements"
+      ],
+      "pedagogical_reasoning": "Selective but high-impact topics. Covers transactional control and basic procedural SQL, often tested in objective and scenario-based questions."
+    }
+  ]
+}
+```

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { formatTime } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { EngagementButtons } from '../components/EngagementButtons';
 
 export const TestCenterPage: React.FC = () => {
     const {
@@ -183,6 +184,12 @@ Result: ${r.is_correct ? 'CORRECT' : 'INCORRECT'}
             <div className="max-w-4xl mx-auto py-8 px-4">
                 <div className="text-center mb-6">
                     <h1 className="text-2xl font-black tracking-tight">{results.topic} Result</h1>
+                    <div className="flex justify-center mt-2">
+                        <EngagementButtons 
+                            contentType="simulation" 
+                            contentId={results.id || 'simulation'} 
+                        />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">

@@ -1,0 +1,10 @@
+
+                Exam Type: SQL Developer 
+                User Goal: Prepare for SQL Developer 
+                Days Until Exam: 7
+                Daily Study Hours: 4
+                Syllabus: Determine standard syllabus based on your knowledge
+                Current Knowledge: {}
+                
+                Generate the structured module-wise study plan.
+                

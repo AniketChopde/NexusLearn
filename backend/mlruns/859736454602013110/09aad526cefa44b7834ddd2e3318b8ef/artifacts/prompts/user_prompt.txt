@@ -1,0 +1,10 @@
+
+                Exam Type: Javascript 
+                User Goal: Prepare for Javascript 
+                Days Until Exam: 8
+                Daily Study Hours: 4
+                Syllabus: Determine standard syllabus based on your knowledge
+                Current Knowledge: {}
+                
+                Generate the structured module-wise study plan.
+                

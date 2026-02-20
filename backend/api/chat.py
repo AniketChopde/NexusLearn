@@ -69,19 +69,60 @@ async def send_message(
         # LLM-only Chat: Use context provided in request + session history
         req_ctx = request.context or chat_session.context or {}
         
+        # RAG Retrieval
+        rag_context = ""
+        sources = []
+        
+        # Check if we have a plan_id in the context to scope the search
+        plan_id = req_ctx.get("plan_id") or req_ctx.get("study_plan_id")
+        
+        if plan_id:
+            logger.info(f"Performing RAG search for plan_id: {plan_id} with query: {request.message}")
+            try:
+                search_results = await vector_store_service.search(
+                    module_id=str(plan_id),
+                    query=request.message,
+                    top_k=3
+                )
+                
+                if search_results:
+                    rag_context = "\n\nRELEVANT KNOWLEDGE BASE CONTENT:\n"
+                    for idx, doc in enumerate(search_results):
+                        source_name = doc.get("source", "Unknown Source")
+                        rag_context += f"--- Source {idx+1}: {source_name} ---\n{doc.get('text', '')}\n"
+                        
+                        sources.append({
+                            "title": source_name,
+                            "url": doc.get("url", ""),
+                            "type": doc.get("metadata", {}).get("type", "file")
+                        })
+                    
+                    logger.info(f"RAG search found {len(search_results)} documents")
+                else:
+                    logger.info("RAG search returned no results")
+            except Exception as e:
+                logger.error(f"RAG search failed: {str(e)}")
+                # Continue without RAG if search fails
+        
         # Format context for the LLM
         context_str = jsonable_encoder(req_ctx)
         
         # Prepare messages including history
         chat_history = chat_session.messages if isinstance(chat_session.messages, list) else []
-        messages_to_send = [{"role": "system", "content": f"""ROLE: Expert AI Teaching Assistant
+        
+        system_content = f"""ROLE: Expert AI Teaching Assistant
 CONTEXT: {context_str}
 
+{rag_context}
+
 RULES:
-- Use the provided context to inform your answer.
+- Use the provided context AND Knowledge Base (if available) to inform your answer.
 - Answer clearly and accurately.
 - Avoid making things up if not sure.
-- Keep the tone helpful and professional."""}]
+- Keep the tone helpful and professional.
+- If using information from the Knowledge Base, verify it's relevant to the user's question."""
+
+        messages_to_send = [{"role": "system", "content": system_content}]
         
         # Add limited history (last 5 turns)
         for msg in chat_history[-10:]:
@@ -94,8 +135,6 @@ RULES:
             messages=messages_to_send,
             temperature=0.7
         )
-        sources = [] # No sources as search is disabled
-
         
         # Add AI message
         ai_message = ChatMessage(

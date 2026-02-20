@@ -43,13 +43,10 @@ function clearAuthAndRedirect(reason?: string) {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
-<<<<<<< HEAD
     localStorage.removeItem('auth-storage'); // clear persisted auth state so reload shows login
-    if (reason) toast.error(reason);
-=======
     sessionStorage.removeItem('access_token');
     sessionStorage.removeItem('refresh_token');
->>>>>>> origin/updatestudyitup
+    if (reason) toast.error(reason);
     window.location.href = '/login';
 }
 
@@ -71,14 +68,9 @@ apiClient.interceptors.response.use(
         console.debug(`[API Error] Status: ${status} | URL: ${url}`, error.response?.data);
 
         // If this 401 is FROM the refresh call itself, do not try to refresh again (prevents loop)
-<<<<<<< HEAD
-        if (error.response?.status === 401 && isRefreshRequest(originalRequest)) {
-            clearAuthAndRedirect('Session expired. Please sign in again.');
-=======
         if (status === 401 && isRefreshRequest(originalRequest)) {
             console.error('[API] Refresh token expired or invalid. Redirecting to login.');
-            clearAuthAndRedirect();
->>>>>>> origin/updatestudyitup
+            clearAuthAndRedirect('Session expired. Please sign in again.');
             return Promise.reject(error);
         }
 
@@ -92,12 +84,8 @@ apiClient.interceptors.response.use(
             const refreshToken = localRefresh || sessionRefresh;
 
             if (!refreshToken) {
-<<<<<<< HEAD
-                clearAuthAndRedirect('Session expired. Please sign in again.');
-=======
                 console.warn('[API] No refresh token available. Redirecting.');
-                clearAuthAndRedirect();
->>>>>>> origin/updatestudyitup
+                clearAuthAndRedirect('Session expired. Please sign in again.');
                 return Promise.reject(error);
             }
 
@@ -146,7 +134,6 @@ apiClient.interceptors.response.use(
         }
 
         // Server unreachable or 5xx: logout so user isn't stuck with a broken UI
-        const status = error.response?.status;
         const isServerError = status != null && status >= 500;
         const isNetworkError = !error.response || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED';
         if (isServerError || isNetworkError) {
@@ -157,21 +144,22 @@ apiClient.interceptors.response.use(
         // Handle other errors (4xx etc.) – show toast only, stay logged in
         const errorData = error.response?.data as any;
         const errorMessage = errorData?.detail || errorData?.message || error.message || 'An error occurred';
-<<<<<<< HEAD
-        toast.error(errorMessage);
-=======
 
         // Filter out 401s from toasting (handled above or ignored during refresh flow)
         // Also handling 403 explicitly if that's what user sees as "Not authenticated"
+        if (status === 403 && (errorMessage === 'Not authenticated' || errorMessage === 'Could not validate credentials')) {
+            console.warn('[API] 403 Not Authenticated. Redirecting.');
+            clearAuthAndRedirect();
+            return Promise.reject(error);
+        }
+
         if (status !== 401) {
             // For 404s on API endpoints, it might mean Nginx misconfig or wrong URL.
-            // We should still toast but maybe clarify?
             if (status === 404 && url?.includes('/api/')) {
                 console.error('[API] 404 Not Found. Potential Nginx/URL issue.');
             }
             toast.error(errorMessage);
         }
->>>>>>> origin/updatestudyitup
 
         return Promise.reject(error);
     }
