@@ -31,6 +31,7 @@ export const TestCenterPage: React.FC = () => {
 
     const [examName, setExamName] = React.useState('');
     const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
+    const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
 
     // Initialization: If we come back and there's no active quiz, reset
     React.useEffect(() => {
@@ -40,26 +41,33 @@ export const TestCenterPage: React.FC = () => {
         }
     }, []);
 
-    // Timer Logic
+    // Timer Logic: countdown when time_limit_minutes set, else just track elapsed
     React.useEffect(() => {
-        if (activeQuiz && activeQuiz.time_limit_minutes && timeStarted && !results) {
-            const totalSeconds = activeQuiz.time_limit_minutes * 60;
+        if (!activeQuiz || !timeStarted || results) return;
 
-            const interval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - timeStarted) / 1000);
-                const remaining = totalSeconds - elapsed;
+        const totalMinutes = activeQuiz.time_limit_minutes ?? 180; // fallback 3h for test center
+        const totalSeconds = totalMinutes * 60;
 
-                if (remaining <= 0) {
-                    setTimeLeft(0);
-                    clearInterval(interval);
-                    handleAutoSubmit();
-                } else {
-                    setTimeLeft(remaining);
-                }
-            }, 1000);
+        const tick = () => {
+            const elapsed = Math.floor((Date.now() - timeStarted) / 1000);
+            setElapsedSeconds(elapsed);
+            const remaining = totalSeconds - elapsed;
 
-            return () => clearInterval(interval);
-        }
+            if (remaining <= 0) {
+                setTimeLeft(0);
+                handleAutoSubmit();
+                return true;
+            }
+            setTimeLeft(remaining);
+            return false;
+        };
+
+        if (tick()) return; // time already up on mount
+        const intervalId = setInterval(() => {
+            if (tick()) clearInterval(intervalId);
+        }, 1000);
+
+        return () => clearInterval(intervalId);
     }, [activeQuiz, timeStarted, results]);
 
     const handleStartTest = async () => {
@@ -280,29 +288,41 @@ Result: ${r.is_correct ? 'CORRECT' : 'INCORRECT'}
 
     // 3. Active Test View
     if (activeQuiz && currentQ) {
+        const showCountdown = activeQuiz.time_limit_minutes != null;
+        const timerValue = showCountdown && timeLeft !== null ? formatTime(timeLeft) : formatTime(elapsedSeconds);
+        const timerLabel = showCountdown ? 'Time left' : 'Elapsed';
+
         return (
             <div className="max-w-5xl mx-auto py-6 px-4 animate-in fade-in duration-700">
-                {/* Fixed Timer Header */}
-                <div className="sticky top-4 z-50 mb-6 p-4 bg-card/90 backdrop-blur-md border border-primary/10 rounded-2xl shadow-lg flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="text-center bg-primary text-primary-foreground p-2 rounded-lg h-10 w-10 flex items-center justify-center text-lg font-bold">
-                            {currentQuestion + 1}
+                {/* Fixed Timer Header - always visible below app top bar */}
+                <div className="fixed left-0 right-0 top-16 z-50 px-4 lg:px-8">
+                    <div className="mx-auto max-w-5xl p-4 bg-card/95 backdrop-blur-md border border-primary/10 rounded-2xl shadow-lg flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="text-center bg-primary text-primary-foreground p-2 rounded-lg h-10 w-10 flex items-center justify-center text-lg font-bold shrink-0">
+                                {currentQuestion + 1}
+                            </div>
+                            <div className="min-w-0">
+                                <h3 className="font-bold uppercase tracking-tight text-xs">Question {currentQuestion + 1} of {activeQuiz.questions.length}</h3>
+                                <p className="text-[10px] font-medium text-muted-foreground uppercase truncate">{activeQuiz.topic}</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-bold uppercase tracking-tight text-xs">Question {currentQuestion + 1} of {activeQuiz.questions.length}</h3>
-                            <p className="text-[10px] font-medium text-muted-foreground uppercase">{activeQuiz.topic}</p>
+
+                        <div className={`flex items-center gap-3 px-5 py-2.5 rounded-xl border transition-colors shrink-0 ${showCountdown && timeLeft !== null && timeLeft < 300 ? 'bg-red-500/10 border-red-500 text-red-600 animate-pulse' : 'bg-muted/30 border-border/50'}`}>
+                            <Timer className="h-5 w-5 text-primary" aria-hidden />
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{timerLabel}</p>
+                                <span className="text-xl font-bold tabular-nums">{timerValue}</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className={`flex items-center gap-3 px-6 py-2 rounded-xl border transition-colors ${timeLeft !== null && timeLeft < 300 ? 'bg-red-500/10 border-red-500 text-red-600 animate-pulse' : 'bg-muted/30 border-border/50'}`}>
-                        <Timer className="h-5 w-5" />
-                        <span className="text-2xl font-bold tabular-nums">{timeLeft !== null ? formatTime(timeLeft) : '--:--'}</span>
+                        <Button onClick={handleManualSubmit} variant="ghost" size="sm" className="rounded-lg font-bold uppercase text-[10px] hover:bg-destructive/10 hover:text-destructive shrink-0">
+                            Early Exit
+                        </Button>
                     </div>
-
-                    <Button onClick={handleManualSubmit} variant="ghost" size="sm" className="rounded-lg font-bold uppercase text-[10px] hover:bg-destructive/10 hover:text-destructive">
-                        Early Exit
-                    </Button>
                 </div>
+
+                {/* Spacer so content starts below the fixed timer bar */}
+                <div className="h-20 shrink-0" aria-hidden />
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     {/* Progress Sidebar */}
