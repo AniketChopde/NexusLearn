@@ -45,7 +45,7 @@ export const TestCenterPage: React.FC = () => {
     React.useEffect(() => {
         if (!activeQuiz || !timeStarted || results) return;
 
-        const totalMinutes = activeQuiz.time_limit_minutes ?? 180; // fallback 3h for test center
+        const totalMinutes = activeQuiz.time_limit_minutes ?? 60; // test center default 60 min
         const totalSeconds = totalMinutes * 60;
 
         const tick = () => {
@@ -102,7 +102,7 @@ export const TestCenterPage: React.FC = () => {
                     </div>
                     <h1 className="text-4xl font-black tracking-tighter uppercase mb-2">Exam Test Center</h1>
                     <p className="text-muted-foreground font-medium max-w-lg mx-auto text-base">
-                        Execute full-scale exam simulations with real rules, timers, and high-weightage topics.
+                        20-question exam simulations with timer. Starts in under 10 seconds.
                     </p>
                 </div>
 
@@ -114,7 +114,7 @@ export const TestCenterPage: React.FC = () => {
                         <div>
                             <h3 className="text-lg font-black">Simulation Engine</h3>
                             <p className="text-xs font-medium text-muted-foreground mt-1">
-                                We search for official exam rules and set a precise timer. The test auto-closes when time is up.
+                                One quick generation, 60-min timer. Test auto-closes when time is up.
                             </p>
                         </div>
                     </div>

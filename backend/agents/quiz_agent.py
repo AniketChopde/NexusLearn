@@ -517,47 +517,30 @@ PYQ QUESTION INPUTS (may include literal questions):
         self,
         topic: str,
         count: int,
-        exam_type: str
+        exam_type: str,
+        skip_pyq: bool = False,
     ) -> List[Dict[str, Any]]:
         """
-        OPTIMIZED: Fast quiz generation for Test Center.
-        Generates questions in ONE LLM call with minimal PYQ search.
-        
-        Performance: 60s vs 3min for 65 questions (3x faster)
-        
-        Args:
-            topic: Topic/subject for questions
-            count: Number of questions
-            exam_type: Exam type
-
-        Returns:
-            List of questions
+        Fast quiz generation for Test Center. One LLM call; set skip_pyq=True for under-10s path.
         """
         try:
-            logger.info(f"⚡ Fast Test Center generation: {count} questions for {topic}")
-            
-            # Quick PYQ search (reduced context)
+            logger.info(f"⚡ Fast Test Center: {count} questions for {topic} (skip_pyq={skip_pyq})")
             pyq_summary = ""
             pyq_found = False
-            
-            if exam_type:
+            if exam_type and not skip_pyq:
                 try:
                     pyq_results = await search_agent.find_previous_year_questions(topic, exam_type)
                     extracted_pyqs = [r for r in pyq_results if isinstance(r, dict) and r.get("question")]
-                    
                     if extracted_pyqs:
-                        # Take only first 3 PYQs for speed
                         sample_pyqs = extracted_pyqs[:3]
                         pyq_summary = "\n".join([
                             f"- {p.get('question', '')[:150]}... (Year: {p.get('year', 'N/A')})"
                             for p in sample_pyqs
                         ])
                         pyq_found = True
-                        logger.info(f"✅ Found {len(extracted_pyqs)} PYQs, using {len(sample_pyqs)} as examples")
                 except Exception as e:
                     logger.warning(f"PYQ search failed: {e}, continuing without PYQs")
-            
-            # Optimized prompt - SHORT and focused
+            # Short prompt for low latency
             system_prompt = f"""Generate {count} exam-level MCQ questions for {exam_type}.
 
 REQUIREMENTS:

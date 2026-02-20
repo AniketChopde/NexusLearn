@@ -146,11 +146,12 @@ apiClient.interceptors.response.use(
             }
         }
 
-        // Server unreachable or 5xx: logout so user isn't stuck with a broken UI
+        // Server unreachable or 5xx: show toast only, stay logged in (no redirect)
         const isServerError = status != null && status >= 500;
         const isNetworkError = !error.response || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED';
         if (isServerError || isNetworkError) {
-            clearAuthAndRedirect('Server unavailable. Please sign in again.');
+            const msg = error.code === 'ECONNABORTED' ? 'Request timed out. Please try again.' : 'Server unavailable. Please try again.';
+            toast.error(msg);
             return Promise.reject(error);
         }
 

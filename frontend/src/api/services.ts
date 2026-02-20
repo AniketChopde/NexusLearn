@@ -95,7 +95,7 @@ export const quizService = {
         apiClient.get<QuizHistoryItem[]>('/quiz/history'),
 
     startTestCenter: (examName: string) =>
-        apiClient.post<Quiz>('/quiz/test-center', { exam_name: examName }),
+        apiClient.post<Quiz>('/quiz/test-center', { exam_name: examName }, { timeout: 25000 }),
 
     generateChapterQuiz: (chapterId: string) =>
         apiClient.post<Quiz>(`/quiz/chapter/${chapterId}/generate`),
